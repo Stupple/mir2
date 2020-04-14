@@ -13,7 +13,7 @@ namespace Server.MirObjects
     {
         protected static Envir Envir
         {
-            get { return SMain.Envir; }
+            get { return Envir.Main; }
         }
 
         public int Guildindex = 0;
@@ -108,7 +108,7 @@ namespace Server.MirObjects
                     UserId = reader.ReadInt64()
                 };
                 
-                if (SMain.Envir.BindItem(Guilditem.Item) && j < StoredItems.Length)
+                if (Envir.BindItem(Guilditem.Item) && j < StoredItems.Length)
                     StoredItems[j] = Guilditem;
             }
             int BuffCount = reader.ReadInt32();
@@ -146,7 +146,7 @@ namespace Server.MirObjects
             int temp = int.MaxValue;
             writer.Write(temp);
             writer.Write(Envir.Version);
-            writer.Write(Envir.LoadVersion);
+            writer.Write(Envir.CustomVersion);
 
             int RankCount = 0;
             for (int i = Ranks.Count - 1; i >= 0; i--)

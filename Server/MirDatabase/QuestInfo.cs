@@ -12,6 +12,21 @@ namespace Server.MirDatabase
 {
     public class QuestInfo
     {
+        protected static Envir Envir
+        {
+            get { return Envir.Main; }
+        }
+
+        protected static Envir EditEnvir
+        {
+            get { return Envir.Edit; }
+        }
+
+        protected static MessageQueue MessageQueue
+        {
+            get { return MessageQueue.Instance; }
+        }
+
         public int Index;
 
         public uint NpcIndex;
@@ -39,7 +54,7 @@ namespace Server.MirDatabase
         public List<string> CompletionDescription = new List<string>(); 
 
         public int RequiredMinLevel, RequiredMaxLevel, RequiredQuest;
-        public RequiredClass RequiredClass = RequiredClass.None;
+        public RequiredClass RequiredClass = RequiredClass.战法道;
 
         public QuestType Type;
 
@@ -75,16 +90,7 @@ namespace Server.MirDatabase
             }
 
             RequiredQuest = reader.ReadInt32();
-            if (Envir.LoadVersion <= 76)
-            {
-
-                RequiredClass = (RequiredClass)reader.ReadByte();
-            }
-            else
-            {
-                RequiredClass = (RequiredClass)reader.ReadUInt16();
-            }
-            //RequiredClass = (RequiredClass)reader.ReadInt32();
+            RequiredClass = (RequiredClass)reader.ReadUInt16();
             Type = (QuestType)reader.ReadByte();
             GotoMessage = reader.ReadString();
             KillMessage = reader.ReadString();
@@ -126,7 +132,7 @@ namespace Server.MirDatabase
                 ParseFile(lines);
             }
             else
-                SMain.Enqueue(string.Format("File Not Found: {0}, Quest: {1}", fileName, Name));
+                MessageQueue.Enqueue(string.Format("File Not Found: {0}, Quest: {1}", fileName, Name));
         }
 
         public void ClearInfo()
@@ -245,14 +251,14 @@ namespace Server.MirDatabase
 
             if (split.Length > 1) uint.TryParse(split[1], out count);
 
-            ItemInfo mInfo = SMain.Envir.GetItemInfo(split[0]);
+            ItemInfo mInfo = Envir.GetItemInfo(split[0]);
 
             if (mInfo == null)
             {
-                mInfo = SMain.Envir.GetItemInfo(split[0] + "(M)");
+                mInfo = Envir.GetItemInfo(split[0] + "(M)");
                 if (mInfo != null) list.Add(new QuestItemReward() { Item = mInfo, Count = count });
 
-                mInfo = SMain.Envir.GetItemInfo(split[0] + "(F)");
+                mInfo = Envir.GetItemInfo(split[0] + "(F)");
                 if (mInfo != null) list.Add(new QuestItemReward() { Item = mInfo, Count = count });
             }
             else
@@ -269,7 +275,7 @@ namespace Server.MirDatabase
             int count = 1;
             string message = "";
 
-            MonsterInfo mInfo = SMain.Envir.GetMonsterInfo(split[0]);
+            MonsterInfo mInfo = Envir.GetMonsterInfo(split[0]);
             if (split.Length > 1) int.TryParse(split[1], out count);
 
             var match = _regexMessage.Match(line);
@@ -289,7 +295,7 @@ namespace Server.MirDatabase
             uint count = 1;
             string message = "";
 
-            ItemInfo mInfo = SMain.Envir.GetItemInfo(split[0]);
+            ItemInfo mInfo = Envir.GetItemInfo(split[0]);
             if (split.Length > 1) uint.TryParse(split[1], out count);
 
             var match = _regexMessage.Match(line);
@@ -337,44 +343,44 @@ namespace Server.MirDatabase
 
             switch (player.Class)
             {
-                case MirClass.Warrior:
-                    if (!RequiredClass.HasFlag(RequiredClass.Warrior))
+                case MirClass.战士:
+                    if (!RequiredClass.HasFlag(RequiredClass.战士))
                         return false;
                     break;
-                case MirClass.Wizard:
-                    if (!RequiredClass.HasFlag(RequiredClass.Wizard))
+                case MirClass.法师:
+                    if (!RequiredClass.HasFlag(RequiredClass.法师))
                         return false;
                     break;
-                case MirClass.Taoist:
-                    if (!RequiredClass.HasFlag(RequiredClass.Taoist))
+                case MirClass.道士:
+                    if (!RequiredClass.HasFlag(RequiredClass.道士))
                         return false;
                     break;
-                case MirClass.Assassin:
-                    if (!RequiredClass.HasFlag(RequiredClass.Assassin))
+                case MirClass.刺客:
+                    if (!RequiredClass.HasFlag(RequiredClass.刺客))
                         return false;
                     break;
-                case MirClass.Archer:
-                    if (!RequiredClass.HasFlag(RequiredClass.Archer))
+                case MirClass.弓箭手:
+                    if (!RequiredClass.HasFlag(RequiredClass.弓箭手))
                         return false;
                     break;
-                case MirClass.HighWarrior:
-                    if (!RequiredClass.HasFlag(RequiredClass.HighWarrior))
+                case MirClass.碧血武士:
+                    if (!RequiredClass.HasFlag(RequiredClass.碧血武士))
                         return false;
                     break;
-                case MirClass.HighWizard:
-                    if (!RequiredClass.HasFlag(RequiredClass.HighWizard))
+                case MirClass.虹玄法师:
+                    if (!RequiredClass.HasFlag(RequiredClass.虹玄法师))
                         return false;
                     break;
-                case MirClass.HighTaoist:
-                    if (!RequiredClass.HasFlag(RequiredClass.HighTaoist))
+                case MirClass.翊仙道士:
+                    if (!RequiredClass.HasFlag(RequiredClass.翊仙道士))
                         return false;
                     break;
-                case MirClass.HighAssassin:
-                    if (!RequiredClass.HasFlag(RequiredClass.HighAssassin))
+                case MirClass.飞燕刺客:
+                    if (!RequiredClass.HasFlag(RequiredClass.飞燕刺客))
                         return false;
                     break;
-                case MirClass.HighArcher:
-                    if (!RequiredClass.HasFlag(RequiredClass.HighArcher))
+                case MirClass.暗鬼弓手:
+                    if (!RequiredClass.HasFlag(RequiredClass.暗鬼弓手))
                         return false;
                     break;
             }
@@ -438,8 +444,8 @@ namespace Server.MirDatabase
 
             info.RequiredClass = (RequiredClass)temp;
 
-            info.Index = ++SMain.EditEnvir.QuestIndex;
-            SMain.EditEnvir.QuestInfoList.Add(info);
+            info.Index = ++EditEnvir.QuestIndex;
+            EditEnvir.QuestInfoList.Add(info);
         }
 
         public string ToText()

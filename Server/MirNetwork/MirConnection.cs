@@ -15,6 +15,16 @@ namespace Server.MirNetwork
 
     public class MirConnection
     {
+        protected static Envir Envir
+        {
+            get { return Envir.Main; }
+        }
+
+        protected static MessageQueue MessageQueue
+        {
+            get { return MessageQueue.Instance; }
+        }
+
         public readonly int SessionID;
         public readonly string IPAddress;
 
@@ -22,7 +32,8 @@ namespace Server.MirNetwork
 
         private TcpClient _client;
         private ConcurrentQueue<Packet> _receiveList;
-        private Queue<Packet> _sendList, _retryList;
+        private ConcurrentQueue<Packet> _sendList; 
+        private Queue<Packet> _retryList;
 
         private bool _disconnecting;
         public bool Connected;
@@ -33,7 +44,7 @@ namespace Server.MirNetwork
             {
                 if (_disconnecting == value) return;
                 _disconnecting = value;
-                TimeOutTime = SMain.Envir.Time + 500;
+                TimeOutTime = Envir.Time + 500;
             }
         }
         public readonly long TimeConnected;
@@ -45,6 +56,7 @@ namespace Server.MirNetwork
         public PlayerObject Player;
         public List<ItemInfo> SentItemInfo = new List<ItemInfo>();
         public List<QuestInfo> SentQuestInfo = new List<QuestInfo>();
+        public List<RecipeInfo> SentRecipeInfo = new List<RecipeInfo>();
         public bool StorageSent;
 
 
@@ -54,32 +66,33 @@ namespace Server.MirNetwork
             IPAddress = client.Client.RemoteEndPoint.ToString().Split(':')[0];
 
             int connCount = 0;
-            for (int i = 0; i < SMain.Envir.Connections.Count; i++)
+            for (int i = 0; i < Envir.Connections.Count; i++)
             {
-                MirConnection conn = SMain.Envir.Connections[i];
+                MirConnection conn = Envir.Connections[i];
                 if (conn.IPAddress == IPAddress && conn.Connected)
                 {
                     connCount++;
 
                     if (connCount >= Settings.MaxIP)
                     {
-                        SMain.EnqueueDebugging(IPAddress + ", Maximum connections reached.");
+                        MessageQueue.EnqueueDebugging(IPAddress + ", Maximum connections reached.");
                         conn.SendDisconnect(5);
                     }
                 }
             }
 
-            SMain.Enqueue(IPAddress + ", Connected.");
+            MessageQueue.Enqueue(IPAddress + ", Connected.");
 
             _client = client;
             _client.NoDelay = true;
 
-            TimeConnected = SMain.Envir.Time;
+            TimeConnected = Envir.Time;
             TimeOutTime = TimeConnected + Settings.TimeOut;
 
 
             _receiveList = new ConcurrentQueue<Packet>();
-            _sendList = new Queue<Packet>(new[] { new S.Connected() });
+            _sendList = new ConcurrentQueue<Packet>();
+            _sendList.Enqueue(new S.Connected());
             _retryList = new Queue<Packet>();
 
             Connected = true;
@@ -179,14 +192,17 @@ namespace Server.MirNetwork
             {
                 Packet p;
                 if (!_receiveList.TryDequeue(out p)) continue;
-                TimeOutTime = SMain.Envir.Time + Settings.TimeOut;
+                TimeOutTime = Envir.Time + Settings.TimeOut;
                 ProcessPacket(p);
+
+                if (_receiveList == null)
+                    return;
             }
 
             while (_retryList.Count > 0)
                 _receiveList.Enqueue(_retryList.Dequeue());
 
-            if (SMain.Envir.Time > TimeOutTime)
+            if (Envir.Time > TimeOutTime)
             {
                 Disconnect(21);
                 return;
@@ -195,9 +211,10 @@ namespace Server.MirNetwork
             if (_sendList == null || _sendList.Count <= 0) return;
 
             List<byte> data = new List<byte>();
-            while (_sendList.Count > 0)
+            while (!_sendList.IsEmpty)
             {
-                Packet p = _sendList.Dequeue();
+                Packet p;
+                if (!_sendList.TryDequeue(out p) || p == null) continue;
                 data.AddRange(p.GetPacketBytes());
             }
 
@@ -340,6 +357,9 @@ namespace Server.MirNetwork
                     break;
                 case (short)ClientPacketIds.BuyItem:
                     BuyItem((C.BuyItem)p);
+                    break;
+                case (short)ClientPacketIds.CraftItem:
+                    CraftItem((C.CraftItem)p);
                     break;
                 case (short)ClientPacketIds.SellItem:
                     SellItem((C.SellItem)p);
@@ -578,8 +598,38 @@ namespace Server.MirNetwork
                 case (short)ClientPacketIds.Opendoor:
                     Opendoor((C.Opendoor)p);
                     break;
+                case (short)ClientPacketIds.GetRentedItems:
+                    GetRentedItems();
+                    break;
+                case (short)ClientPacketIds.ItemRentalRequest:
+                    ItemRentalRequest();
+                    break;
+                case (short)ClientPacketIds.ItemRentalFee:
+                    ItemRentalFee((C.ItemRentalFee)p);
+                    break;
+                case (short)ClientPacketIds.ItemRentalPeriod:
+                    ItemRentalPeriod((C.ItemRentalPeriod)p);
+                    break;
+                case (short)ClientPacketIds.DepositRentalItem:
+                    DepositRentalItem((C.DepositRentalItem)p);
+                    break;
+                case (short)ClientPacketIds.RetrieveRentalItem:
+                    RetrieveRentalItem((C.RetrieveRentalItem)p);
+                    break;
+                case (short)ClientPacketIds.CancelItemRental:
+                    CancelItemRental();
+                    break;
+                case (short)ClientPacketIds.ItemRentalLockFee:
+                    ItemRentalLockFee();
+                    break;
+                case (short)ClientPacketIds.ItemRentalLockItem:
+                    ItemRentalLockItem();
+                    break;
+                case (short)ClientPacketIds.ConfirmItemRental:
+                    ConfirmItemRental();
+                    break;
                 default:
-                    SMain.Enqueue(string.Format("Invalid packet received. Index : {0}", p.Index));
+                    MessageQueue.Enqueue(string.Format("Invalid packet received. Index : {0}", p.Index));
                     break;
             }
         }
@@ -587,7 +637,7 @@ namespace Server.MirNetwork
         public void SoftDisconnect(byte reason)
         {
             Stage = GameStage.Disconnected;
-            TimeDisconnected = SMain.Envir.Time;
+            TimeDisconnected = Envir.Time;
             
             lock (Envir.AccountLock)
             {
@@ -606,10 +656,10 @@ namespace Server.MirNetwork
 
             Connected = false;
             Stage = GameStage.Disconnected;
-            TimeDisconnected = SMain.Envir.Time;
+            TimeDisconnected = Envir.Time;
 
-            lock (SMain.Envir.Connections)
-                SMain.Envir.Connections.Remove(this);
+            lock (Envir.Connections)
+                Envir.Connections.Remove(this);
 
             lock (Envir.AccountLock)
             {
@@ -665,11 +715,11 @@ namespace Server.MirNetwork
 
                     BeginSend(data);
                     SoftDisconnect(10);
-                    SMain.Enqueue(SessionID + ", Disconnnected - Wrong Client Version.");
+                    MessageQueue.Enqueue(SessionID + ", Disconnnected - Wrong Client Version.");
                     return;
                 }
 
-            SMain.Enqueue(SessionID + ", " + IPAddress + ", Client version matched.");
+            MessageQueue.Enqueue(SessionID + ", " + IPAddress + ", Client version matched.");
             Enqueue(new S.ClientVersion { Result = 1 });
 
             Stage = GameStage.Login;
@@ -685,28 +735,28 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Login) return;
 
-            SMain.Enqueue(SessionID + ", " + IPAddress + ", New account being created.");
-            SMain.Envir.NewAccount(p, this);
+            MessageQueue.Enqueue(SessionID + ", " + IPAddress + ", New account being created.");
+            Envir.NewAccount(p, this);
         }
         private void ChangePassword(C.ChangePassword p)
         {
             if (Stage != GameStage.Login) return;
 
-            SMain.Enqueue(SessionID + ", " + IPAddress + ", Password being changed.");
-            SMain.Envir.ChangePassword(p, this);
+            MessageQueue.Enqueue(SessionID + ", " + IPAddress + ", Password being changed.");
+            Envir.ChangePassword(p, this);
         }
         private void Login(C.Login p)
         {
             if (Stage != GameStage.Login) return;
 
-            SMain.Enqueue(SessionID + ", " + IPAddress + ", User logging in.");
-            SMain.Envir.Login(p, this);
+            MessageQueue.Enqueue(SessionID + ", " + IPAddress + ", User logging in.");
+            Envir.Login(p, this);
         }
         private void NewCharacter(C.NewCharacter p)
         {
             if (Stage != GameStage.Select) return;
 
-            SMain.Envir.NewCharacter(p, this, Account.AdminAccount);
+            Envir.NewCharacter(p, this, Account.AdminAccount);
         }
         private void DeleteCharacter(C.DeleteCharacter p)
         {
@@ -736,8 +786,8 @@ namespace Server.MirNetwork
             }
 
             temp.Deleted = true;
-            temp.DeleteDate = SMain.Envir.Now;
-            SMain.Envir.RemoveRank(temp);
+            temp.DeleteDate = Envir.Now;
+            Envir.RemoveRank(temp);
             Enqueue(new S.DeleteCharacterSuccess { CharacterIndex = temp.Index });
         }
         private void StartGame(C.StartGame p)
@@ -784,7 +834,7 @@ namespace Server.MirNetwork
             info.BanReason = string.Empty;
             info.ExpiryDate = DateTime.MinValue;
 
-            long delay = (long) (SMain.Envir.Now - info.LastDate).TotalMilliseconds;
+            long delay = (long) (Envir.Now - info.LastDate).TotalMilliseconds;
 
 
             //if (delay < Settings.RelogDelay)
@@ -801,7 +851,7 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            if (SMain.Envir.Time < Player.LogTime)
+            if (Envir.Time < Player.LogTime)
             {
                 Enqueue(new S.LogOutFailed());
                 return;
@@ -819,7 +869,7 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            if (Player.ActionTime > SMain.Envir.Time)
+            if (Player.ActionTime > Envir.Time)
                 _retryList.Enqueue(p);
             else
                 Player.Turn(p.Direction);
@@ -828,7 +878,7 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            if (Player.ActionTime > SMain.Envir.Time)
+            if (Player.ActionTime > Envir.Time)
                 _retryList.Enqueue(p);
             else
                 Player.Walk(p.Direction);
@@ -837,7 +887,7 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            if (Player.ActionTime > SMain.Envir.Time)
+            if (Player.ActionTime > Envir.Time)
                 _retryList.Enqueue(p);
             else
                 Player.Run(p.Direction);
@@ -1004,7 +1054,7 @@ namespace Server.MirNetwork
         private void ChangePMode(C.ChangePMode p)
         {
             if (Stage != GameStage.Game) return;
-            if (Player.Class != MirClass.Wizard && Player.Class != MirClass.Taoist && Player.Pets.Count == 0)
+            if (Player.Class != MirClass.法师 && Player.Class != MirClass.道士 && Player.Pets.Count == 0)
                 return;
 
             Player.PMode = p.Mode;
@@ -1021,7 +1071,7 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            if (!Player.Dead && (Player.ActionTime > SMain.Envir.Time || Player.AttackTime > SMain.Envir.Time))
+            if (!Player.Dead && (Player.ActionTime > Envir.Time || Player.AttackTime > Envir.Time))
                 _retryList.Enqueue(p);
             else
                 Player.Attack(p.Direction, p.Spell);
@@ -1030,7 +1080,7 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            if (!Player.Dead && (Player.ActionTime > SMain.Envir.Time || Player.AttackTime > SMain.Envir.Time))
+            if (!Player.Dead && (Player.ActionTime > Envir.Time || Player.AttackTime > Envir.Time))
                 _retryList.Enqueue(p);
             else
                 Player.RangeAttack(p.Direction, p.TargetLocation, p.TargetID);
@@ -1039,7 +1089,7 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            if (!Player.Dead && Player.ActionTime > SMain.Envir.Time)
+            if (!Player.Dead && Player.ActionTime > Envir.Time)
                 _retryList.Enqueue(p);
             else
                 Player.Harvest(p.Direction);
@@ -1055,7 +1105,7 @@ namespace Server.MirNetwork
                 return;
             }
 
-            if (p.ObjectID == Player.DefaultNPC.ObjectID)
+            if (p.ObjectID == Player.DefaultNPC.ObjectID && Player.NPCID == Player.DefaultNPC.ObjectID)
             {
                 Player.CallDefaultNPC(p.ObjectID, p.Key);
                 return;
@@ -1075,7 +1125,13 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            Player.BuyItem(p.ItemIndex, p.Count);
+            Player.BuyItem(p.ItemIndex, p.Count, p.Type);
+        }
+        private void CraftItem(C.CraftItem p)
+        {
+            if (Stage != GameStage.Game) return;
+
+            Player.CraftItem(p.UniqueID, p.Count, p.Slots);
         }
         private void SellItem(C.SellItem p)
         {
@@ -1122,7 +1178,7 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            if (!Player.Dead && (Player.ActionTime > SMain.Envir.Time || Player.SpellTime > SMain.Envir.Time))
+            if (!Player.Dead && (Player.ActionTime > Envir.Time || Player.SpellTime > Envir.Time))
                 _retryList.Enqueue(p);
             else
                 Player.Magic(p.Spell, p.Direction, p.TargetID, p.Location);
@@ -1176,7 +1232,10 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            Player.MarketSearch(p.Match);
+            Player.UserMatch = p.Usermode;
+            Player.MinShapes = p.MinShape;
+            Player.MaxShapes = p.MaxShape;
+            Player.MarketSearch(p.Match, p.Type, p.Grade);
         }
         private void MarketRefresh()
         {
@@ -1195,7 +1254,7 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
-            Player.MarketBuy(p.AuctionID);
+            Player.MarketBuy(p.AuctionID, p.MailItems);
         }
         private void MarketGetBack(C.MarketGetBack p)
         {
@@ -1328,9 +1387,9 @@ namespace Server.MirNetwork
 
                 Player.AllowMentor = !Player.AllowMentor;
                 if (Player.AllowMentor)
-                    Player.ReceiveChat("You're now allowing mentor requests.", ChatType.Hint);
+                    Player.ReceiveChat(GameLanguage.AllowingMentorRequests, ChatType.Hint);
                 else
-                    Player.ReceiveChat("You're now blocking mentor requests.", ChatType.Hint);
+                    Player.ReceiveChat(GameLanguage.BlockingMentorRequests, ChatType.Hint);
         }
 
         private void CancelMentor(C.CancelMentor p)
@@ -1436,7 +1495,7 @@ namespace Server.MirNetwork
         private void CancelReincarnation()
         {
             if (Stage != GameStage.Game) return;
-            Player.ReincarnationExpireTime = SMain.Envir.Time;
+            Player.ReincarnationExpireTime = Envir.Time;
 
         }
 
@@ -1567,9 +1626,10 @@ namespace Server.MirNetwork
                 //Update the creature info
                 for (int i = 0; i < Player.Info.IntelligentCreatures.Count; i++)
                 {
-                    if (Player.Info.IntelligentCreatures[i].PetType == petUpdate.PetType)
+                    if (Player.SummonedCreatureType != petUpdate.PetType && Player.Info.IntelligentCreatures[i].PetType == petUpdate.PetType)
                     {
-                        Player.Info.IntelligentCreatures[i].CustomName = petUpdate.CustomName;
+                        if (petUpdate.CustomName.Length <= 12)
+                            Player.Info.IntelligentCreatures[i].CustomName = petUpdate.CustomName;
                         Player.Info.IntelligentCreatures[i].SlotIndex = petUpdate.SlotIndex;
                         Player.Info.IntelligentCreatures[i].Filter = petUpdate.Filter;
                         Player.Info.IntelligentCreatures[i].petMode = petUpdate.petMode;
@@ -1640,14 +1700,14 @@ namespace Server.MirNetwork
 
             return;
 
-            Image.Add(p.Image);
+            // Image.Add(p.Image);
 
-            if (p.ImageChunk >= p.ImageSize)
-            {
-                System.Drawing.Image image = Functions.ByteArrayToImage(Functions.CombineArray(Image));
-                image.Save("Reported-" + Player.Name + "-" + DateTime.Now.ToString("yyMMddHHmmss") + ".jpg");
-                Image.Clear();
-            }
+            // if (p.ImageChunk >= p.ImageSize)
+            // {
+            //     System.Drawing.Image image = Functions.ByteArrayToImage(Functions.CombineArray(Image));
+            //     image.Save("Reported-" + Player.Name + "-" + DateTime.Now.ToString("yyMMddHHmmss") + ".jpg");
+            //     Image.Clear();
+            // }
         }
         private void GetRanking(C.GetRanking p)
         {
@@ -1659,6 +1719,86 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
             Player.Opendoor(p.DoorIndex);
+        }
+
+        private void GetRentedItems()
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.GetRentedItems();
+        }
+
+        private void ItemRentalRequest()
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.ItemRentalRequest();
+        }
+
+        private void ItemRentalFee(C.ItemRentalFee p)
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.SetItemRentalFee(p.Amount);
+        }
+
+        private void ItemRentalPeriod(C.ItemRentalPeriod p)
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.SetItemRentalPeriodLength(p.Days);
+        }
+
+        private void DepositRentalItem(C.DepositRentalItem p)
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.DepositRentalItem(p.From, p.To);
+        }
+
+        private void RetrieveRentalItem(C.RetrieveRentalItem p)
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.RetrieveRentalItem(p.From, p.To);
+        }
+
+        private void CancelItemRental()
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.CancelItemRental();
+        }
+
+        private void ItemRentalLockFee()
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.ItemRentalLockFee();
+        }
+
+        private void ItemRentalLockItem()
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.ItemRentalLockItem();
+        }
+
+        private void ConfirmItemRental()
+        {
+            if (Stage != GameStage.Game)
+                return;
+
+            Player.ConfirmItemRental();
         }
     }
 }

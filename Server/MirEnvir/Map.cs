@@ -13,9 +13,14 @@ namespace Server.MirEnvir
     {
         private static Envir Envir
         {
-            get { return SMain.Envir; }
+            get { return Envir.Main; }
         }
-        
+
+        protected static MessageQueue MessageQueue
+        {
+            get { return MessageQueue.Instance; }
+        }
+
         public MapInfo Info;
 
         public int Thread = 0;
@@ -464,7 +469,6 @@ namespace Server.MirEnvir
                             break;
                     }
                     
-
                     for (int i = 0; i < Info.Respawns.Count; i++)
                     {
                         MapRespawn info = new MapRespawn(Info.Respawns[i]);
@@ -473,7 +477,7 @@ namespace Server.MirEnvir
                         Respawns.Add(info);
 
                         if ((info.Info.SaveRespawnTime) && (info.Info.RespawnTicks != 0))
-                            SMain.Envir.SavedSpawns.Add(info);
+                            Envir.SavedSpawns.Add(info);
                     }
 
 
@@ -493,10 +497,10 @@ namespace Server.MirEnvir
             }
             catch (Exception ex)
             {
-                SMain.Enqueue(ex);
+                MessageQueue.Enqueue(ex);
             }
 
-            SMain.Enqueue("Failed to Load Map: " + Info.FileName);
+            MessageQueue.Enqueue("Failed to Load Map: " + Info.FileName);
             return false;
         }
 
@@ -648,8 +652,7 @@ namespace Server.MirEnvir
                     Point Location;
                     if (Envir.Random.Next(4) == 0)
                     {
-                        Location = player.CurrentLocation;
-                        
+                        Location = player.CurrentLocation;          
                     }
                     else
                         Location = new Point(player.CurrentLocation.X - 10 + Envir.Random.Next(20), player.CurrentLocation.Y - 10 + Envir.Random.Next(20));
@@ -767,7 +770,7 @@ namespace Server.MirEnvir
                         {
                             respawn.ErrorCount++;
 
-                            File.AppendAllText(@".\SpawnErrors.txt",
+                            File.AppendAllText(Path.Combine(Settings.ErrorPath, "SpawnErrors.txt"),
                                 String.Format("[{5}]Failed to spawn: mapindex: {0} ,mob info: index: {1} spawncoords ({2}:{3}) range {4}", respawn.Map.Info.Index, respawn.Info.MonsterIndex, respawn.Info.Location.X, respawn.Info.Location.Y, respawn.Info.Spread, DateTime.Now)
                                        + Environment.NewLine);
                             //*/
@@ -857,7 +860,7 @@ namespace Server.MirEnvir
                                 if (target.IsAttackTarget(player))
                                 {
                                     if (target.Attacked(player, value, DefenceType.MAC, false) > 0)
-                                        player.LevelMagic(magic);
+                                        train = true;
                                     return;
                                 }
                                 break;
@@ -1905,7 +1908,9 @@ namespace Server.MirEnvir
 
                 case Spell.Trap:
                     value = (int)data[2];
-                    location = (Point)data[3];
+                    //location = (Point)data[3];
+                    MapObject originalTarget = (MapObject)data[3];
+                    location = originalTarget.CurrentLocation;
                     MonsterObject selectTarget = null;
 
                     if (!ValidPoint(location)) break;
@@ -2115,6 +2120,58 @@ namespace Server.MirEnvir
                     break;
 
                 #endregion
+
+                #region BattleCry
+
+                case Spell.BattleCry:
+                    location = (Point)data[2];
+
+                    for (int y = location.Y - 2; y <= location.Y + 2; y++)
+                    {
+                        if (y < 0) continue;
+                        if (y >= Height) break;
+
+                        for (int x = location.X - 2; x <= location.X + 2; x++)
+                        {
+                            if (x < 0) continue;
+                            if (x >= Width) break;
+
+                            cell = GetCell(x, y);
+
+                            if (!cell.Valid || cell.Objects == null) continue;
+
+                            for (int i = 0; i < cell.Objects.Count; i++)
+                            {
+                                MapObject target = cell.Objects[i];
+                                if (target.Race != ObjectType.Monster) continue;
+
+                                if (magic.Level == 0)
+                                {
+                                    if (Envir.Random.Next(60) >= 4) continue;
+                                }
+                                else if (magic.Level == 1)
+                                {
+                                    if (Envir.Random.Next(45) >= 3) continue;
+                                }
+                                else if (magic.Level == 2)
+                                {
+                                    if (Envir.Random.Next(30) >= 2) continue;
+                                }
+                                else if (magic.Level == 3)
+                                {
+                                    if (Envir.Random.Next(15) >= 1) continue;
+                                }
+
+                                if (((MonsterObject)target).Info.CoolEye == 100) continue;
+                                target.Target = player;
+                                target.OperateTime = 0;
+                                train = true;
+                            }
+                        }
+                    }
+                    break;
+
+                    #endregion
             }
 
             if (train)
@@ -2229,8 +2286,8 @@ namespace Server.MirEnvir
     }
     public class Cell
     {
-        public static readonly Cell HighWall = new Cell { Attribute = CellAttribute.HighWall };
-        public static readonly Cell LowWall = new Cell { Attribute = CellAttribute.LowWall };
+        public static Cell LowWall { get { return new Cell { Attribute = CellAttribute.LowWall }; } }
+        public static Cell HighWall { get { return new Cell { Attribute = CellAttribute.HighWall }; } }
 
         public bool Valid
         {
@@ -2255,6 +2312,11 @@ namespace Server.MirEnvir
     }
     public class MapRespawn
     {
+        protected static Envir Envir
+        {
+            get { return Envir.Main; }
+        }
+
         public RespawnInfo Info;
         public MonsterInfo Monster;
         public Map Map;
@@ -2268,7 +2330,7 @@ namespace Server.MirEnvir
         public MapRespawn(RespawnInfo info)
         {
             Info = info;
-            Monster = SMain.Envir.GetMonsterInfo(info.MonsterIndex);
+            Monster = Envir.GetMonsterInfo(info.MonsterIndex);
 
             LoadRoutes();
         }

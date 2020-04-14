@@ -62,10 +62,31 @@ namespace Server.MirObjects
                 ExpireTime = Envir.Time + Settings.ItemTimeOut * Settings.Minute;
 
             Item = item;
+
             if (Item.IsAdded)
                 NameColour = Color.Cyan;
+			else
+			{
+				if (item.Info.Grade == ItemGrade.None)
+					NameColour = Color.White;
+				if (item.Info.Grade == ItemGrade.Common)
+					NameColour = Color.White;
+				if (item.Info.Grade == ItemGrade.Rare)
+					NameColour = Color.DeepSkyBlue;
+				if (item.Info.Grade == ItemGrade.Legendary)
+					NameColour = Color.DarkOrange;
+                if (item.Info.Grade == ItemGrade.Mythical)
+                    NameColour = Color.Plum;
+                if (item.Info.Grade == ItemGrade.Uncommon)
+                    NameColour = Color.LimeGreen;
+                if (item.Info.Grade == ItemGrade.Unique)
+                    NameColour = Color.Gold;
+                if (item.Info.Grade == ItemGrade.Set)
+                    NameColour = Color.Lime;
 
-            CurrentMap = dropper.CurrentMap;
+            }
+
+			CurrentMap = dropper.CurrentMap;
             CurrentLocation = dropper.CurrentLocation;
         }
         public ItemObject(MapObject dropper, UserItem item, Point manualpoint)
@@ -73,8 +94,28 @@ namespace Server.MirObjects
             ExpireTime = Envir.Time + Settings.ItemTimeOut * Settings.Minute;
 
             Item = item;
-            if (Item.IsAdded)
-                NameColour = Color.Cyan;
+
+			if (Item.IsAdded)
+				NameColour = Color.Cyan;
+			else
+			{
+				if (item.Info.Grade == ItemGrade.None)
+					NameColour = Color.White;
+				if (item.Info.Grade == ItemGrade.Common)
+					NameColour = Color.White;
+				if (item.Info.Grade == ItemGrade.Rare)
+					NameColour = Color.DeepSkyBlue;
+				if (item.Info.Grade == ItemGrade.Legendary)
+					NameColour = Color.DarkOrange;
+				if (item.Info.Grade == ItemGrade.Mythical)
+					NameColour = Color.Plum;
+                if (item.Info.Grade == ItemGrade.Uncommon)
+                    NameColour = Color.LimeGreen;
+                if (item.Info.Grade == ItemGrade.Unique)
+                    NameColour = Color.Gold;
+                if (item.Info.Grade == ItemGrade.Set)
+                    NameColour = Color.Lime;
+            }
 
             CurrentMap = dropper.CurrentMap;
             CurrentLocation = manualpoint;
@@ -343,7 +384,8 @@ namespace Server.MirObjects
                         Name = Item.Count > 1 ? string.Format("{0} ({1})", Name, Item.Count) : Name,
                         NameColour = NameColour,
                         Location = CurrentLocation,
-                        Image = Item.Image
+                        Image = Item.Image,
+                        Grade = Item.Info.Grade
                     };
 
             return new S.ObjectGold

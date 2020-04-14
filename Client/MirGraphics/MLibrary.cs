@@ -17,6 +17,7 @@ namespace Client.MirGraphics
             ChrSel = new MLibrary(Settings.DataPath + "ChrSel"),
             Prguse = new MLibrary(Settings.DataPath + "Prguse"),
             Prguse2 = new MLibrary(Settings.DataPath + "Prguse2"),
+            Prguse3 = new MLibrary(Settings.DataPath + "Prguse3"),
             BuffIcon = new MLibrary(Settings.DataPath + "BuffIcon"),
             Help = new MLibrary(Settings.DataPath + "Help"),
             MiniMap = new MLibrary(Settings.DataPath + "MMap"),
@@ -28,7 +29,8 @@ namespace Client.MirGraphics
             Magic3 = new MLibrary(Settings.DataPath + "Magic3"),
             Effect = new MLibrary(Settings.DataPath + "Effect"),
             MagicC = new MLibrary(Settings.DataPath + "MagicC"),
-            GuildSkill = new MLibrary(Settings.DataPath + "GuildSkill");
+            GuildSkill = new MLibrary(Settings.DataPath + "GuildSkill"),
+            ItemEffects = new MLibrary(Settings.DataPath + "ItemEffects");
 
         public static readonly MLibrary
             Background = new MLibrary(Settings.DataPath + "Background");
@@ -65,8 +67,9 @@ namespace Client.MirGraphics
 
         public static readonly MLibrary[] CArmours = new MLibrary[42],
                                           CWeapons = new MLibrary[55],
-                                          CHair = new MLibrary[9],
-                                          CHumEffect = new MLibrary[3],
+										  CWeaponEffect = new MLibrary[67],
+										  CHair = new MLibrary[9],
+                                          CHumEffect = new MLibrary[6],
                                           AArmours = new MLibrary[17],
                                           AWeaponsL = new MLibrary[14],
                                           AWeaponsR = new MLibrary[14],
@@ -77,12 +80,13 @@ namespace Client.MirGraphics
                                           ARWeaponsS = new MLibrary[19],
                                           ARHair = new MLibrary[9],
                                           ARHumEffect = new MLibrary[3],
-                                          Monsters = new MLibrary[406],
+                                          Monsters = new MLibrary[427],
                                           Gates = new MLibrary[2],
                                           Flags = new MLibrary[12],
                                           Mounts = new MLibrary[12],
                                           NPCs = new MLibrary[200],
                                           Fishing = new MLibrary[2],
+
                                           Pets = new MLibrary[12],
 
 
@@ -119,9 +123,10 @@ namespace Client.MirGraphics
                                           UpArcHair = new MLibrary[9],
                                           UpArcHumEffect = new MLibrary[3],
 
-                                          
+                                          UpMounts = new MLibrary[5],
                                           UpFishingM = new MLibrary[2],
                                           UpFishingF = new MLibrary[2],
+
 
                                           Transform = new MLibrary[28],
                                           TransformMounts = new MLibrary[28],
@@ -140,10 +145,13 @@ namespace Client.MirGraphics
             for (int i = 0; i < CWeapons.Length; i++)
                 CWeapons[i] = new MLibrary(Settings.CWeaponPath + i.ToString("00"));
 
-            for (int i = 0; i < CHumEffect.Length; i++)
+			for (int i = 0; i < CWeaponEffect.Length; i++)
+				CWeaponEffect[i] = new MLibrary(Settings.CWeaponEffectPath + i.ToString("00"));
+
+			for (int i = 0; i < CHumEffect.Length; i++)
                 CHumEffect[i] = new MLibrary(Settings.CHumEffectPath + i.ToString("00"));
 
-            //Assassin
+            //刺客
             for (int i = 0; i < AArmours.Length; i++)
                 AArmours[i] = new MLibrary(Settings.AArmourPath + i.ToString("00"));
 
@@ -159,7 +167,7 @@ namespace Client.MirGraphics
             for (int i = 0; i < AHumEffect.Length; i++)
                 AHumEffect[i] = new MLibrary(Settings.AHumEffectPath + i.ToString("00"));
 
-            //Archer
+            //弓箭手
             for (int i = 0; i < ARArmours.Length; i++)
                 ARArmours[i] = new MLibrary(Settings.ARArmourPath + i.ToString("00"));
 
@@ -258,7 +266,8 @@ namespace Client.MirGraphics
             for (int i = 0; i < UpArcHumEffect.Length; i++)
                 UpArcHumEffect[i] = new MLibrary(Settings.UpArcHumEffectPath + i.ToString("00"));
 
-           
+            for (int i = 0; i < UpMounts.Length; i++)
+                UpMounts[i] = new MLibrary(Settings.UpMountPath + i.ToString("00"));
 
             for (int i = 0; i < UpFishingM.Length; i++)
                 UpFishingM[i] = new MLibrary(Settings.UpFishingPath + i.ToString("00M"));
@@ -383,6 +392,9 @@ namespace Client.MirGraphics
             Prguse2.Initialize();
             Progress++;
 
+            Prguse3.Initialize();
+            Progress++;
+
             Title.Initialize();
             Progress++;
         }
@@ -390,7 +402,7 @@ namespace Client.MirGraphics
         private static void LoadGameLibraries()
         {
             Count = MapLibs.Length + Monsters.Length + Gates.Length + NPCs.Length + CArmours.Length +
-                CHair.Length + CWeapons.Length + AArmours.Length + AHair.Length + AWeaponsL.Length + AWeaponsR.Length +
+                CHair.Length + CWeapons.Length + CWeaponEffect.Length + AArmours.Length + AHair.Length + AWeaponsL.Length + AWeaponsR.Length +
                 ARArmours.Length + ARHair.Length + ARWeapons.Length + ARWeaponsS.Length +
                 CHumEffect.Length + AHumEffect.Length + ARHumEffect.Length + Mounts.Length + Fishing.Length + Pets.Length +
                 Transform.Length + TransformMounts.Length + TransformEffect.Length + TransformWeaponEffect.Length + 17;
@@ -425,6 +437,9 @@ namespace Client.MirGraphics
             Progress++;
 
             GuildSkill.Initialize();
+            Progress++;
+
+            ItemEffects.Initialize();
             Progress++;
 
             Background.Initialize();
@@ -486,7 +501,13 @@ namespace Client.MirGraphics
                 Progress++;
             }
 
-            for (int i = 0; i < AArmours.Length; i++)
+			for (int i = 0; i < CWeaponEffect.Length; i++)
+			{
+				CWeaponEffect[i].Initialize();
+				Progress++;
+			}
+
+			for (int i = 0; i < AArmours.Length; i++)
             {
                 AArmours[i].Initialize();
                 Progress++;

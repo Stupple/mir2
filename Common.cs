@@ -9,6 +9,23 @@ using C = ClientPackets;
 using S = ServerPackets;
 using System.Linq;
 
+public enum PanelType : byte
+{
+    Buy = 0,
+    Sell,
+    Repair,
+    SpecialRepair,
+    Consign,
+    Craft,
+    Refine,
+    CheckRefine,
+    Disassemble,
+    Downgrade,
+    Reset,
+    CollectRefine,
+    ReplaceWedRing,
+}
+
 public enum BlendMode : sbyte
 {
     NONE = -1,
@@ -72,6 +89,9 @@ public enum ItemGrade : byte
     Rare = 2,
     Legendary = 3,
     Mythical = 4,
+    Uncommon = 5,
+    Unique = 6,
+    Set = 7,
 }
 public enum StatType : byte
 {
@@ -165,7 +185,9 @@ public enum IntelligentCreatureType : byte
     OlympicFlame = 8,
     BabySnowMan = 9,
     Frog = 10,
-    BabyMonkey = 11
+    BabyMonkey = 11,
+    AngryBird = 12,
+    Foxey = 13,
 }
 
 //1 blank mob files
@@ -317,12 +339,12 @@ public enum Monster : ushort
     BrownFrogSpider = 138,
     ArcherGuard = 139,
     KatanaGuard = 140,
-    //BLANK_141 = 141,
+    ArcherGuard2 = 141,
     Pig = 142,
     Bull = 143,
     Bush = 144,
     ChristmasTree = 145,
-    HighAssassin = 146,
+    飞燕刺客 = 146,
     DarkDustPile = 147,
     DarkBrownWolf = 148,
     Football = 149, 
@@ -354,7 +376,7 @@ public enum Monster : ushort
         SiegeRepairman = 175, //not added frames
     BlueSanta = 176,//done
     BattleStandard = 177,//done
-    ArcherGuard2 = 178,//done
+    //ArcherGuard2 = 178,//done
     RedYimoogi = 179,//done
     LionRiderMale = 180, //frames not added
     LionRiderFemale = 181, //frames not added
@@ -538,11 +560,11 @@ public enum Monster : ushort
     Leopard = 355,
     ChieftainArcher = 356,
     ChieftainSword = 357,
-    StoningSpider = 358, //Archer Spell mob (not yet coded)
-    VampireSpider = 359, //Archer Spell mob
-    SpittingToad = 360, //Archer Spell mob
-    SnakeTotem = 361, //Archer Spell mob
-    CharmedSnake = 362, //Archer Spell mob
+    StoningSpider = 358, //弓箭手 Spell mob (not yet coded)
+    VampireSpider = 359, //弓箭手 Spell mob
+    SpittingToad = 360, //弓箭手 Spell mob
+    SnakeTotem = 361, //弓箭手 Spell mob
+    CharmedSnake = 362, //弓箭手 Spell mob
     FrozenSoldier = 363,
     FrozenFighter = 364,
     FrozenArcher = 365,
@@ -584,7 +606,11 @@ public enum Monster : ushort
     Ram1 = 400,
     Ram2 = 401,
     Kite = 402,
-    
+
+    SoldierAnt = 423,
+    ShooterAnt = 424,
+    ArmouredAnt = 425,
+    FeederAnt = 426,
 
     EvilMir = 900,
     EvilMirBody = 901,
@@ -616,6 +642,8 @@ public enum Monster : ushort
     BabySnowMan = 10009,//unknown
     Frog = 10010,//unknown
     BabyMonkey = 10011,//unknown
+    AngryBird = 10012,
+    Foxey = 10013,
 }
 
 public enum MirAction : byte
@@ -695,16 +723,16 @@ public enum MirGender : byte
 [Obfuscation(Feature = "renaming", Exclude = true)]
 public enum MirClass : byte
 {
-    Warrior = 0,
-    Wizard = 1,
-    Taoist = 2,
-    Assassin = 3,
-    Archer = 4,
-    HighWarrior = 5,
-    HighWizard = 6,
-    HighTaoist = 7,
-    HighAssassin = 8,
-    HighArcher = 9,
+    战士 = 0,
+    法师 = 1,
+    道士 = 2,
+    刺客 = 3,
+    弓箭手 = 4,
+    碧血武士 = 5,
+    虹玄法师 = 6,
+    翊仙道士 = 7,
+    飞燕刺客 = 8,
+    暗鬼弓手 = 9,
 }
 
 public enum MirDirection : byte
@@ -790,6 +818,7 @@ public enum ItemType : byte
 	Awakening = 35,
     Pets = 36,
     Transform = 37,
+    Charm = 38,
 }
 
 public enum MirGridType : byte
@@ -811,6 +840,9 @@ public enum MirGridType : byte
     AwakenItem = 14,
     Mail = 15,
     Refine = 16,
+    Renting = 17,
+    GuestRenting = 18,
+    Craft = 19
 }
 
 public enum EquipmentSlot : byte
@@ -903,6 +935,9 @@ public enum BindMode : short
     BindOnEquip = 512,//0x0200
     NoSRepair = 1024,//0x0400
     NoWeddingRing = 2048,//0x0800
+    UnableToRent = 4096,
+    UnableToDisassemble = 8192,
+    NoMail = 16384
 }
 
 [Flags]
@@ -921,6 +956,7 @@ public enum SpecialItemMode : short
     Probe = 0x0100,
     Skill = 0x0200,
     NoDuraLoss = 0x0400,
+    Blink = 0x800,
 }
 
 [Flags]
@@ -928,23 +964,22 @@ public enum SpecialItemMode : short
 public enum RequiredClass : ushort
 {
     
-    Warrior = 1,
-    Wizard = 2,
-    Taoist = 4,
-    Assassin = 8,
-    Archer = 16,
+    战士 = 1,
+    法师 = 2,
+    道士 = 4,
+    刺客 = 8,
+    弓箭手 = 16,
 
-    HighWarrior = 30,
-    HighWizard = 60,
-    HighTaoist = 120,
-    HighAssassin = 240,
-    HighArcher = 482,
 
-    High = HighWarrior | HighWizard | HighTaoist | HighAssassin | HighArcher,
-    WarWizTao = Warrior | Wizard | Taoist,
-    AllWarWizTao = HighWarrior | HighWizard | HighTaoist | WarWizTao,
-    Low = WarWizTao | Assassin | Archer,
-    None = Low | High
+    战法道 = 战士 | 法师 | 道士,
+    碧血武士 = 32,
+    虹玄法师 = 64,
+    翊仙道士 = 128,
+    飞燕刺客 = 256,
+    暗鬼弓手 = 512,
+    hig = 碧血武士 | 虹玄法师 | 翊仙道士 | 飞燕刺客 | 暗鬼弓手,
+    low = 战法道 | 刺客 | 弓箭手,
+    None = low | hig,
 
 }
 [Flags]
@@ -959,11 +994,17 @@ public enum RequiredGender : byte
 public enum RequiredType : byte
 {
     Level = 0,
-    AC = 1,
-    MAC = 2,
-    DC = 3,
-    MC = 4,
-    SC = 5,
+    MaxAC = 1,
+    MaxMAC = 2,
+    MaxDC = 3,
+    MaxMC = 4,
+    MaxSC = 5,
+    MaxLevel = 6,
+    MinAC = 7,
+    MinMAC = 8,
+    MinDC = 9,
+    MinMC = 10,
+    MinSC = 11,
 }
 
 [Obfuscation(Feature = "renaming", Exclude = true)]
@@ -1007,7 +1048,7 @@ public enum Spell : byte
 {
     None = 0,
 
-    //Warrior
+    //战士
     Fencing = 1,
     Slaying = 2,
     Thrusting = 3,
@@ -1026,7 +1067,7 @@ public enum Spell : byte
     Fury = 16,
     ImmortalSkin = 17,
 
-    //Wizard
+    //法师
     FireBall = 31,
     Repulsion = 32,
     ElectricShock = 33,
@@ -1053,7 +1094,7 @@ public enum Spell : byte
     FastMove = 54,
     StormEscape = 55,
 
-    //Taoist
+    //道士
     Healing = 61,
     SpiritSword = 62,
     Poisoning = 63,
@@ -1080,7 +1121,7 @@ public enum Spell : byte
     PetEnhancer = 85,
     HealingCircle = 86,
 
-    //Assassin
+    //刺客
     FatalSword = 91,
     DoubleSlash = 92,
     Haste = 93,
@@ -1098,7 +1139,7 @@ public enum Spell : byte
     CrescentSlash = 105,
     MoonMist = 106,
 
-    //Archer
+    //弓箭手
     Focus = 121,
     StraightShot = 122,
     DoubleShot = 123,
@@ -1124,6 +1165,7 @@ public enum Spell : byte
     //Custom
     Blink = 151,
     Portal = 152,
+    BattleCry = 153,
     
     //Map Events
     DigOutZombie = 200,
@@ -1216,7 +1258,7 @@ public enum BuffType : byte
     //stats
     Impact = 200,
     Magic,
-    Taoist,
+    道士,
     Storm,
     HealthAid,
     ManaAid,
@@ -1336,6 +1378,7 @@ public enum ServerPacketIds : short
     NPCReplaceWedRing,
     NPCStorage,
     SellItem,
+    CraftItem,
     RepairItem,
     ItemRepaired,
     NewMagic,
@@ -1447,8 +1490,10 @@ public enum ServerPacketIds : short
     MailSent,
     ParcelCollected,
     MailCost,
+
     HumUpPlayer,//stupple
     ResizeInventory,
+
     ResizeStorage,
     NewIntelligentCreature,
     UpdateIntelligentCreatureList,
@@ -1466,6 +1511,21 @@ public enum ServerPacketIds : short
     GameShopStock,
     Rankings,
     Opendoor,
+
+    GetRentedItems,
+    ItemRentalRequest,
+    ItemRentalFee,
+    ItemRentalPeriod,
+    DepositRentalItem,
+    RetrieveRentalItem,
+    UpdateRentalItem,
+    CancelItemRental,
+    ItemRentalLock,
+    ItemRentalPartnerLock,
+    CanConfirmItemRental,
+    ConfirmItemRental,
+    NewRecipeInfo,
+    OpenBrowser
 }
 
 public enum ClientPacketIds : short
@@ -1515,6 +1575,7 @@ public enum ClientPacketIds : short
     TalkMonsterNPC,
     BuyItem,
     SellItem,
+    CraftItem,
     RepairItem,
     BuyItemBack,
     SRepairItem,
@@ -1598,6 +1659,17 @@ public enum ClientPacketIds : short
     ReportIssue,
     GetRanking,
     Opendoor,
+
+    GetRentedItems,
+    ItemRentalRequest,
+    ItemRentalFee,
+    ItemRentalPeriod,
+    DepositRentalItem,
+    RetrieveRentalItem,
+    CancelItemRental,
+    ItemRentalLockFee,
+    ItemRentalLockItem,
+    ConfirmItemRental
 }
 
 public enum ConquestType : byte
@@ -2080,10 +2152,9 @@ public static class Globals
 
     public const uint SearchDelay = 500,
                       ConsignmentLength = 7,
-                      ConsignmentCost = 5000,
-                      MinConsignment = 5000,
+                      ConsignmentCost = 1000,
+                      MinConsignment = 1000,
                       MaxConsignment = 50000000;
-
 }
 
 public static class Functions
@@ -2433,7 +2504,7 @@ public static class Functions
         {
             ItemInfo info = ItemList[i];
             if (info.Name.StartsWith(Origin.Name))
-                if (((ushort)info.RequiredClass == (1 << (ushort)job)) && (Origin.RequiredGender == info.RequiredGender))
+                if (((ushort)info.RequiredClass == (1 << (byte)job)) && (Origin.RequiredGender == info.RequiredGender))
                     return info;
         }
         return Origin;
@@ -2446,7 +2517,7 @@ public static class Functions
         {
             ItemInfo info = ItemList[i];
             if (info.Name.StartsWith(Origin.Name))
-                if ((ushort)info.RequiredClass == (1 << (ushort)job))
+                if ((ushort)info.RequiredClass == (1 << (byte)job))
                     if ((info.RequiredType == RequiredType.Level) && (info.RequiredAmount <= level) && (output.RequiredAmount <= info.RequiredAmount) && (Origin.RequiredGender == info.RequiredGender))
                         output = info;
         }
@@ -2552,7 +2623,10 @@ public class ItemInfo
     public ItemType Type;
     public ItemGrade Grade;
     public RequiredType RequiredType = RequiredType.Level;
+
     public RequiredClass RequiredClass = RequiredClass.None;
+
+
     public RequiredGender RequiredGender = RequiredGender.None;
     public ItemSet Set;
 
@@ -2576,7 +2650,7 @@ public class ItemInfo
     public byte Strong;
     public byte MagicResist, PoisonResist, HealthRecovery, SpellRecovery, PoisonRecovery, HPrate, MPrate;
     public byte CriticalRate, CriticalDamage;
-    public bool NeedIdentify, ShowGroupPickup;
+    public bool NeedIdentify, ShowGroupPickup, GlobalDropNotify;
     public bool ClassBased;
     public bool LevelBased;
     public bool CanMine;
@@ -2619,16 +2693,7 @@ public class ItemInfo
         Type = (ItemType) reader.ReadByte();
         if (version >= 40) Grade = (ItemGrade)reader.ReadByte();
         RequiredType = (RequiredType) reader.ReadByte();
-        if (version <= 76)
-              {
-            
-                RequiredClass = (RequiredClass) reader.ReadByte();
-                }
-                        else
-              {
-                RequiredClass = (RequiredClass) reader.ReadUInt16();
-                            }
-         //   RequiredClass = (RequiredClass) reader.ReadInt32(); // stupple ushort
+        RequiredClass = (RequiredClass) reader.ReadInt16();
         RequiredGender = (RequiredGender) reader.ReadByte();
         if(version >= 17) Set = (ItemSet)reader.ReadByte();
 
@@ -2694,6 +2759,10 @@ public class ItemInfo
             ClassBased = (bools & 0x04) == 0x04;
             LevelBased = (bools & 0x08) == 0x08;
             CanMine = (bools & 0x10) == 0x10;
+
+            if (version >= 77)
+                GlobalDropNotify = (bools & 0x20) == 0x20;
+
             MaxAcRate = reader.ReadByte();
             MaxMacRate = reader.ReadByte();
             Holy = reader.ReadByte();
@@ -2809,6 +2878,7 @@ public class ItemInfo
         if (ClassBased) bools |= 0x04;
         if (LevelBased) bools |= 0x08;
         if (CanMine) bools |= 0x10;
+        if (GlobalDropNotify) bools |= 0x20;
         writer.Write(bools);
         writer.Write(MaxAcRate);
         writer.Write(MaxMacRate);
@@ -2974,6 +3044,7 @@ public class UserItem
     public DateTime BuybackExpiryDate;
 
     public ExpireInfo ExpireInfo;
+    public RentalInformation RentalInformation;
 
 	public Awake Awake = new Awake();
     public bool IsAdded
@@ -3077,10 +3148,13 @@ public class UserItem
         if (version < 65) return;
 
         if (reader.ReadBoolean())
-        {
             ExpireInfo = new ExpireInfo(reader, version, Customversion);
-        }
 
+        if (version < 76)
+            return;
+
+        if (reader.ReadBoolean())
+            RentalInformation = new RentalInformation(reader, version, Customversion);
     }
 
     public void Save(BinaryWriter writer)
@@ -3142,11 +3216,10 @@ public class UserItem
         writer.Write(WeddingRing);
 
         writer.Write(ExpireInfo != null);
+        ExpireInfo?.Save(writer);
 
-        if (ExpireInfo != null)
-        {
-            ExpireInfo.Save(writer);
-        }
+        writer.Write(RentalInformation != null);
+        RentalInformation?.Save(writer);
     }
 
 
@@ -3179,9 +3252,10 @@ public class UserItem
     }
     public uint RepairPrice()
     {
-        if (Info == null || Info.Durability == 0) return 0;
+        if (Info == null || Info.Durability == 0)
+            return 0;
 
-        uint p = Info.Price;
+        var p = Info.Price;
 
         if (Info.Durability > 0)
         {
@@ -3190,7 +3264,12 @@ public class UserItem
 
         }
 
-        return (p * Count) - Price();
+        var cost = p * Count - Price();
+
+        if (RentalInformation == null)
+            return cost;
+
+        return cost * 2;
     }
 
     public uint Quality()
@@ -3314,6 +3393,7 @@ public class UserItem
             CurrentDura = CurrentDura,
             MaxDura = MaxDura,
             Count = Count,
+	    GemCount = GemCount,
 
             AC = AC,
             MAC = MAC,
@@ -3349,8 +3429,9 @@ public class UserItem
             RefinedValue = RefinedValue,
             RefineAdded = RefineAdded,
 
-            ExpireInfo = ExpireInfo
-            };
+            ExpireInfo = ExpireInfo,
+            RentalInformation = RentalInformation
+        };
 
         return item;
     }
@@ -3374,6 +3455,33 @@ public class ExpireInfo
     public void Save(BinaryWriter writer)
     {
         writer.Write(ExpiryDate.ToBinary());
+    }
+}
+
+public class RentalInformation
+{
+    public string OwnerName;
+    public BindMode BindingFlags = BindMode.none;
+    public DateTime ExpiryDate;
+    public bool RentalLocked;
+
+    public RentalInformation()
+    { }
+
+    public RentalInformation(BinaryReader reader, int version = int.MaxValue, int CustomVersion = int.MaxValue)
+    {
+        OwnerName = reader.ReadString();
+        BindingFlags = (BindMode)reader.ReadInt16();
+        ExpiryDate = DateTime.FromBinary(reader.ReadInt64());
+        RentalLocked = reader.ReadBoolean();
+    }
+
+    public void Save(BinaryWriter writer)
+    {
+        writer.Write(OwnerName);
+        writer.Write((short)BindingFlags);
+        writer.Write(ExpiryDate.ToBinary());
+        writer.Write(RentalLocked);
     }
 }
 
@@ -3514,9 +3622,14 @@ public class Awake
 
     public bool CheckAwakening(UserItem item, AwakeType type)
     {
-        if (item.Info.CanAwakening != true) return false;
+        if (item.Info.Bind.HasFlag(BindMode.DontUpgrade))
+            return false;
 
-        if (item.Info.Grade == ItemGrade.None) return false;
+        if (item.Info.CanAwakening != true)
+            return false;
+
+        if (item.Info.Grade == ItemGrade.None)
+            return false;
 
         if (IsMaxLevel()) return false;
 
@@ -3673,6 +3786,7 @@ public class Awake
 
 public class ClientMagic
 {
+    public string Name;
     public Spell Spell;
     public byte BaseCost, LevelCost, Icon;
     public byte Level1, Level2, Level3, Level4;//stupple
@@ -3691,6 +3805,7 @@ public class ClientMagic
 
     public ClientMagic(BinaryReader reader)//stupple data
     {
+        Name = reader.ReadString();
         Spell = (Spell)reader.ReadByte();
 
         BaseCost = reader.ReadByte();
@@ -3718,6 +3833,7 @@ public class ClientMagic
 
     public void Save(BinaryWriter writer)
     {
+        writer.Write(Name);
         writer.Write((byte)Spell);
 
         writer.Write(BaseCost);
@@ -3829,9 +3945,7 @@ public class ClientQuestInfo
         MinLevelNeeded = reader.ReadInt32();
         MaxLevelNeeded = reader.ReadInt32();
         QuestNeeded = reader.ReadInt32();
-
-
-        ClassNeeded = (RequiredClass)reader.ReadInt16(); //stupple?
+        ClassNeeded = (RequiredClass)reader.ReadInt16();
         Type = (QuestType)reader.ReadByte();
         RewardGold = reader.ReadUInt32();
         RewardExp = reader.ReadUInt32();
@@ -3871,7 +3985,7 @@ public class ClientQuestInfo
         writer.Write(MinLevelNeeded);
         writer.Write(MaxLevelNeeded);
         writer.Write(QuestNeeded);
-        writer.Write((ushort)ClassNeeded);
+        writer.Write((byte)ClassNeeded);
         writer.Write((byte)Type);
         writer.Write(RewardGold);
         writer.Write(RewardExp);
@@ -4488,6 +4602,8 @@ public abstract class Packet
                 return new C.BuyItem();
             case (short)ClientPacketIds.SellItem:
                 return new C.SellItem();
+            case (short)ClientPacketIds.CraftItem:
+                return new C.CraftItem();
             case (short)ClientPacketIds.RepairItem:
                 return new C.RepairItem();
             case (short)ClientPacketIds.BuyItemBack:
@@ -4643,6 +4759,26 @@ public abstract class Packet
                 return new C.GetRanking();
             case (short)ClientPacketIds.Opendoor:
                 return new C.Opendoor();
+            case (short)ClientPacketIds.GetRentedItems:
+                return new C.GetRentedItems();
+            case (short)ClientPacketIds.ItemRentalRequest:
+                return new C.ItemRentalRequest();
+            case (short)ClientPacketIds.ItemRentalFee:
+                return new C.ItemRentalFee();
+            case (short)ClientPacketIds.ItemRentalPeriod:
+                return new C.ItemRentalPeriod();
+            case (short)ClientPacketIds.DepositRentalItem:
+                return new C.DepositRentalItem();
+            case (short)ClientPacketIds.RetrieveRentalItem:
+                return new C.RetrieveRentalItem();
+            case (short)ClientPacketIds.CancelItemRental:
+                return new C.CancelItemRental();
+            case (short)ClientPacketIds.ItemRentalLockFee:
+                return new C.ItemRentalLockFee();
+            case (short)ClientPacketIds.ItemRentalLockItem:
+                return new C.ItemRentalLockItem();
+            case (short)ClientPacketIds.ConfirmItemRental:
+                return new C.ConfirmItemRental();           
             default:
                 return null;
         }
@@ -4844,6 +4980,8 @@ public abstract class Packet
                 return new S.NPCStorage();
             case (short)ServerPacketIds.SellItem:
                 return new S.SellItem();
+            case (short)ServerPacketIds.CraftItem:
+                return new S.CraftItem();
             case (short)ServerPacketIds.RepairItem:
                 return new S.RepairItem();
             case (short)ServerPacketIds.ItemRepaired:
@@ -5012,7 +5150,7 @@ public abstract class Packet
                 return new S.UserDashAttack();
             case (short)ServerPacketIds.ObjectDashAttack:
                 return new S.ObjectDashAttack();
-            case (short)ServerPacketIds.UserAttackMove://Warrior Skill - SlashingBurst
+            case (short)ServerPacketIds.UserAttackMove://战士 Skill - SlashingBurst
                 return new S.UserAttackMove();
             case (short)ServerPacketIds.CombineItem:
                 return new S.CombineItem();
@@ -5098,6 +5236,34 @@ public abstract class Packet
                 return new S.Rankings();
             case (short)ServerPacketIds.Opendoor:
                 return new S.Opendoor();
+            case (short)ServerPacketIds.GetRentedItems:
+                return new S.GetRentedItems();
+            case (short)ServerPacketIds.ItemRentalRequest:
+                return new S.ItemRentalRequest();
+            case (short)ServerPacketIds.ItemRentalFee:
+                return new S.ItemRentalFee();
+            case (short)ServerPacketIds.ItemRentalPeriod:
+                return new S.ItemRentalPeriod();
+            case (short)ServerPacketIds.DepositRentalItem:
+                return new S.DepositRentalItem();
+            case (short)ServerPacketIds.RetrieveRentalItem:
+                return new S.RetrieveRentalItem();
+            case (short)ServerPacketIds.UpdateRentalItem:
+                return new S.UpdateRentalItem();
+            case (short)ServerPacketIds.CancelItemRental:
+                return new S.CancelItemRental();
+            case (short)ServerPacketIds.ItemRentalLock:
+                return new S.ItemRentalLock();
+            case (short)ServerPacketIds.ItemRentalPartnerLock:
+                return new S.ItemRentalPartnerLock();
+            case (short)ServerPacketIds.CanConfirmItemRental:
+                return new S.CanConfirmItemRental();
+            case (short)ServerPacketIds.ConfirmItemRental:
+                return new S.ConfirmItemRental();
+            case (short)ServerPacketIds.NewRecipeInfo:
+                return new S.NewRecipeInfo();
+            case (short)ServerPacketIds.OpenBrowser:
+                return new S.OpenBrowser();
             default:
                 return null;
         }
@@ -5113,8 +5279,8 @@ public class BaseStats
     {
         switch (Job)
         {
-            case MirClass.Warrior:
-            case MirClass.HighWarrior:
+            case MirClass.战士:
+            case MirClass.碧血武士:
                 HpGain = 4F;
                 HpGainRate = 4.5F;
                 MpGainRate = 0;
@@ -5138,8 +5304,8 @@ public class BaseStats
                 CritialRateGain = 0;
                 CriticalDamageGain = 0;
                 break;
-            case MirClass.Wizard:
-            case MirClass.HighWizard:
+            case MirClass.法师:
+            case MirClass.虹玄法师:
                 HpGain = 15F;
                 HpGainRate = 1.8F;
                 MpGainRate = 0;
@@ -5163,8 +5329,8 @@ public class BaseStats
                 CritialRateGain = 0;
                 CriticalDamageGain = 0;
                 break;
-            case MirClass.Taoist:
-            case MirClass.HighTaoist:
+            case MirClass.道士:
+            case MirClass.翊仙道士:
                 HpGain = 6F;
                 HpGainRate = 2.5F;
                 MpGainRate = 0;
@@ -5188,8 +5354,8 @@ public class BaseStats
                 CritialRateGain = 0;
                 CriticalDamageGain = 0;
                 break;
-            case MirClass.Assassin:
-            case MirClass.HighAssassin:
+            case MirClass.刺客:
+            case MirClass.飞燕刺客:
                 HpGain = 4F;
                 HpGainRate = 3.25F;
                 MpGainRate = 0;
@@ -5213,8 +5379,8 @@ public class BaseStats
                 CritialRateGain = 0;
                 CriticalDamageGain = 0;
                 break;
-            case MirClass.Archer:
-            case MirClass.HighArcher:
+            case MirClass.弓箭手:
+            case MirClass.暗鬼弓手:
                 HpGain = 4F;
                 HpGainRate = 3.25F;
                 MpGainRate = 0;
@@ -5973,82 +6139,82 @@ public class GuildBuffInfo
         //text = name + "\n";
         if (BuffAc > 0)
         {
-            text += string.Format("Increases AC by: 0-{0}.", BuffAc);
+            text += string.Format("增加 AC by: 0-{0}.", BuffAc);
             if (text != "") text += "\n";
         }
         if (BuffMac > 0)
         {
-            text += string.Format("Increases MAC by: 0-{0}.", BuffMac);
+            text += string.Format("增加 MAC by: 0-{0}.", BuffMac);
             if (text != "") text += "\n";
         }
         if (BuffDc > 0)
         {
-            text += string.Format("Increases DC by: 0-{0}.", BuffDc);
+            text += string.Format("增加 DC by: 0-{0}.", BuffDc);
             if (text != "") text += "\n";
         }
         if (BuffMc > 0)
         {
-            text += string.Format("Increases MC by: 0-{0}.", BuffMc);
+            text += string.Format("增加 MC by: 0-{0}.", BuffMc);
             if (text != "") text += "\n";
         }
         if (BuffSc > 0)
         {
-            text += string.Format("Increases SC by: 0-{0}.", BuffSc);
+            text += string.Format("增加 SC by: 0-{0}.", BuffSc);
             if (text != "") text += "\n";
         }
         if (BuffMaxHp > 0)
         {
-            text += string.Format("Increases Hp by: {0}.", BuffMaxHp);
+            text += string.Format("增加 Hp by: {0}.", BuffMaxHp);
             if (text != "") text += "\n";
         }
         if (BuffMaxMp > 0)
         {
-            text += string.Format("Increases MP by: {0}.", BuffMaxMp);
+            text += string.Format("增加 MP by: {0}.", BuffMaxMp);
             if (text != "") text += "\n";
         }
         if (BuffHpRegen > 0)
         {
-            text += string.Format("Increases Health regen by: {0}.", BuffHpRegen);
+            text += string.Format("增加 Health regen by: {0}.", BuffHpRegen);
             if (text != "") text += "\n";
         }
         if (BuffMPRegen > 0)
         {
-            text += string.Format("Increases Mana regen by: {0}.", BuffMPRegen);
+            text += string.Format("增加 Mana regen by: {0}.", BuffMPRegen);
             if (text != "") text += "\n";
         }
         if (BuffMineRate > 0)
         {
-            text += string.Format("Increases Mining success by: {0}%.", BuffMineRate * 5);
+            text += string.Format("增加 Mining success by: {0}%.", BuffMineRate * 5);
             if (text != "") text += "\n";
         }
         if (BuffGemRate > 0)
         {
-            text += string.Format("Increases Gem success by: {0}%.", BuffGemRate * 5);
+            text += string.Format("增加 Gem success by: {0}%.", BuffGemRate * 5);
             if (text != "") text += "\n";
         }
         if (BuffFishRate > 0)
         {
-            text += string.Format("Increases Fishing success by: {0}%.", BuffFishRate * 5);
+            text += string.Format("增加 Fishing success by: {0}%.", BuffFishRate * 5);
             if (text != "") text += "\n";
         }
         if (BuffExpRate > 0)
         {
-            text += string.Format("Increases Experience by: {0}%.", BuffExpRate);
+            text += string.Format("增加 Experience by: {0}%.", BuffExpRate);
             if (text != "") text += "\n";
         }
         if (BuffCraftRate > 0)
         {
-            text += string.Format("Increases Crafting success by: {0}%.", BuffCraftRate * 5);
+            text += string.Format("增加 Crafting success by: {0}%.", BuffCraftRate * 5);
             if (text != "") text += "\n";
         }
         if (BuffSkillRate > 0)
         {
-            text += string.Format("Increases Skill training by: {0}.", BuffSkillRate);
+            text += string.Format("增加 Skill training by: {0}.", BuffSkillRate);
             if (text != "") text += "\n";
         }
         if (BuffAttack > 0)
         {
-            text += string.Format("Increases Damage by: {0}.", BuffAttack);
+            text += string.Format("增加 Damage by: {0}.", BuffAttack);
             if (text != "") text += "\n";
         }
         if (BuffDropRate > 0)
@@ -6180,4 +6346,898 @@ public class Door
     public byte ImageIndex;
     public long LastTick;
     public Point Location;
+}
+
+public class ItemRentalInformation
+{
+    public ulong ItemId;
+    public string ItemName;
+    public string RentingPlayerName;
+    public DateTime ItemReturnDate;
+
+    public ItemRentalInformation()
+    { }
+
+    public ItemRentalInformation(BinaryReader reader)
+    {
+        ItemId = reader.ReadUInt64();
+        ItemName = reader.ReadString();
+        RentingPlayerName = reader.ReadString();
+        ItemReturnDate = DateTime.FromBinary(reader.ReadInt64());
+    }
+
+    public void Save(BinaryWriter writer)
+    {
+        writer.Write(ItemId);
+        writer.Write(ItemName);
+        writer.Write(RentingPlayerName);
+        writer.Write(ItemReturnDate.ToBinary());
+    }
+}
+
+public class ClientRecipeInfo
+{
+    public UserItem Item;
+    public List<UserItem> Ingredients = new List<UserItem>();
+
+    public ClientRecipeInfo()
+    {
+
+    }
+
+    public ClientRecipeInfo(BinaryReader reader)
+    {
+        Item = new UserItem(reader);
+
+        int count = reader.ReadInt32();
+        for (int i = 0; i < count; i++)
+        {
+            Ingredients.Add(new UserItem(reader));
+        }
+    }
+
+    public void Save(BinaryWriter writer)
+    {
+        Item.Save(writer);
+
+        writer.Write(Ingredients.Count);
+        foreach (var ingredient in Ingredients)
+        {
+            ingredient.Save(writer);
+        }
+    }
+}
+
+
+
+//default is English
+public class GameLanguage
+{
+    //Client
+    public static string PetMode_Both = "[宠物：攻击和移动]",
+                         PetMode_MoveOnly = "[宠物：不要攻击]",
+                         PetMode_AttackOnly = "[宠物：不要移动]",
+                         PetMode_None = "[宠物：不要攻击或移动",
+
+                         AttackMode_Peace = "[模式：和平]",
+                         AttackMode_Group = "[模式：组队]",
+                         AttackMode_Guild = "[模式：行会]",
+                         AttackMode_EnemyGuild = "[模式：敌对行会]",
+                         AttackMode_RedBrown = "[模式：红名/反击]",
+                         AttackMode_All = "[模式：全体攻击]",
+
+                         LogOutTip = "你想退出传奇吗？",
+                         ExitTip = "你要返回角色界面吗?？",
+                         DiedTip = "你死亡了,你想在城里复活吗?",
+                         DropTip = "您确定要扔掉吗 {0}?",
+
+                         Inventory = "包裹 ({0})",
+                         Character = "角色 ({0})",
+                         Skills = "技能 ({0})",
+                         Quests = "任务 ({0})",
+                         Options = "设置 ({0})",
+                         Menu = "菜单",
+                         GameShop = "商 城 ({0})",
+                         BigMap = "大地图 ({0})",
+                         DuraPanel = "耐久面板",
+                         Mail = "邮件",
+                         Exit = "大退 ({0})",
+                         LogOut = "小退 ({0})",
+                         Help = "帮助 ({0})",
+                         Keybinds = "按键绑定",
+                         Ranking = "排行 ({0})",
+                         Creatures = "宠物 ({0})",
+                         Mount = "坐骑 ({0})",
+                         Fishing = "钓鱼 ({0})",
+                         Friends = "朋友 ({0})",
+                         Mentor = "师徒 ({0})",
+                         Relationship = "关系状态 ({0})",
+                         Groups = "队伍 ({0})",
+                         Guild = "行会 ({0})",
+                         Expire = "到期: {0}",
+                         ExpireNever = "永久",
+                         Never = "从未",
+                         Trade = "交易 ({0})",
+                         Size = "尺寸",
+                         ChatSettings = "聊天设置",
+                         Rotate = "旋转",
+                         Close = "关闭 ({0})",
+                         GameMaster = "GameMaster",
+
+
+                         PatchErr = "无法获取修补程序信息",
+                         LastOnline = "上次在线时间",
+
+                         Gold = "金币",
+                         Credit = "银币",
+
+                         YouGained = "你获取了 {0}.",
+
+                         YouGained2 = "你获取了 {0:###,###,###} {1}",
+
+                         ExperienceGained = "获得经验值{0}",
+
+                         ItemDescription = "物品描述",
+                         RequiredLevel = "需要等级 : {0}",
+                         RequiredDC = "需要攻击 : {0}",
+                         RequiredMC = "需要魔法 : {0}",
+                         RequiredSC = "需要道术 : {0}",
+                         ClassRequired = "需要职业 : {0}",
+
+                         Holy = "神圣: + {0} (+{1})",
+                         Holy2 = "神圣: + {0}",
+                         Accuracy = "准确: + {0} (+{1})",
+                         Accuracy2 = "准确: + {0}",
+                         Agility = "敏捷: + {0} (+{1})",
+                         Agility2 = "敏捷: + {0}",
+                         DC = "攻击 + {0}~{1} (+{2})",
+                         DC2 = "攻击 + {0}~{1}",
+                         MC = "魔法 + {0}~{1} (+{2})",
+                         MC2 = "魔法 + {0}~{1}",
+                         SC = "道术 + {0}~{1} (+{2})",
+                         SC2 = "道术 + {0}~{1}",
+                         Durability = "耐久",
+                         Weight = "重量:",
+                         AC = "防御 + {0}~{1} (+{2})",
+                         AC2 = "防御 + {0}~{1}",
+                         MAC = "魔御 + {0}~{1} (+{2})",
+                         MAC2 = "魔御 + {0}~{1}",
+                         Luck = "幸运 + {0}",
+
+                         DeleteCharacter = "你确定你要删除这个角色吗 {0}",
+                         CharacterDeleted = "已成功删除您的角色.",
+                         CharacterCreated = "您的角色创建成功..",
+
+                         Resolution = "分辨率",
+                         Autostart = "自动开始",
+                         Usrname = "用户名",
+                         Password = "密码",
+
+                         ShuttingDown = "已断开连接：服务器正在关闭.",
+                         MaxCombine = "最大堆叠数量 : {0}{1}按住Shift键并单击鼠标左键可拆分",
+                         Count = " 数量 {0}",
+                         ExtraSlots8 = "你确定用1000000金币购买8个额外背包空间?" +
+                         "继续购买你可以解锁4个背包空间，最购买40个空间.",
+                         ExtraSlots4 = "你确定花费: {0:###,###} 购买4个额外背包空间吗",
+
+                         Chat_All = "全部",
+                         Chat_Short = "喊话",
+                         Chat_Whisper = "密语",
+                         Chat_Lover = "夫妻",
+                         Chat_Mentor = "师徒",
+                         Chat_Group = "队伍",
+                         Chat_Guild = "行会",
+                         ExpandedStorageLocked = "扩展存储已锁定",
+                         ExtraStorage = "你想租10天的额外仓库吗，费用是100万金币?",
+                         ExtendYourRentalPeriod = "您想把租期延长10天吗？费用是1000000金币?",
+
+                         CannotLeaveGame = "不能离开游戏 {0} 秒",
+                         SelectKey = "选择的按键: {0}",
+
+                         WeaponSpiritFire = "你的武器因精神火球而炙热.",
+                         SpiritsFireDisappeared = "精神火球消失了.",
+                         WeddingRing = "结婚戒指",
+                         WedRingName = "{0}{1}{2} {3}",
+                         DropAmount = "掉落金额:",
+                         LowMana = "没有足够的法力施法..",
+                         NoCreatures = "你没有任何生物.",
+                         NoMount = "你没有坐骑.",
+                         NoFishingRod = "你没有拿鱼竿.",
+                         AttemptingConnect = "正在尝试连接到服务器.{0}尝试:{1}",
+
+                         CreatingCharactersDisabled = "当前已禁用创建新角色..",
+                         InvalidCharacterName = "您的角色名称是不能接受的.",
+                         NoClass = "您选择的职业不存在。联系GM寻求帮助..",
+                         ToManyCharacters = "你不能再创造更多的角色 {0}..",
+                         CharacterNameExists = "具有此名称的角色名已存在..",
+                         WarriorsDes = "以强有力的体格为基础，特殊之处在于用剑法及刀法等技术。对打猎、战斗比较适用。" +
+                                        " 体力强的战士能带许多东西，即便穿戴沉重的武器及铠甲也可以自由活动。" +
+                                        " 但战士所戴的铠甲对魔法的防御能力相对较弱。.",
+                         WizardDes = "以长时间锻炼的内功为基础，能发挥强大的攻击型魔法。魔法攻击力卓越，但体力较弱。" +
+                                        "对体力上直接受到攻击的防御能力较低，另外，发挥高水平的魔法时需要较长时间，此时可能受到对方的快速攻击。" +
+                                        " 魔法师的魔法比任何攻击能力都强大，能有效的威胁对方。",
+                         TaoistDes = "以强大的精神力作为基础，可以使用治疗术帮助别人。" +
+                                        " 对自然很熟悉，在用毒方面的能力最强。" +
+                                        " 博学多知，能使用剑术和魔法，所以每时每刻都能发挥多样的法术，随机应变性强。",
+                         AssassinDes = "以敏捷快速的攻击为基础，矫健的刺客还拥有超强的爆发性，他们熟悉各种技能" +
+                                        " 尤其擅长瞬移、潜行技能！" +
+                                        " 他们是暗夜的主人，是绝对的伤害高、攻击高、爆发型的职业。.",
+                         ArcherDes = "强大的远程输出：作为一个名副其实的远程物理输出职业，弓箭最擅长在敌人攻击范围之外对敌人造成致命打击。" +
+                                        " 多变：弓箭手永远是战场上的未知数，就必须练就准确的判断力，熟练掌握其操作技巧" +
+                                        " 华丽：鲜艳的服装、优雅的射击动作和绚美的特效，非弓箭手莫属!.",
+                         DateSent = "发送日期 : {0}",
+                         Send = "发送",
+                         Reply = "回复",
+                         Read = "阅读",
+                         Delete = "删除",
+                         BlockList = "阻止列表",
+                         EnterMailToName = "请输入您要邮寄的人的姓名.",
+                         AddFriend = "添加",
+                         RemoveFriend = "移除",
+                         FriendMemo = "备注",
+                         FriendMail = "邮件",
+                         FriendWhisper = "密语",
+                         FriendEnterAddName = "请输入要添加的人员的姓名.",
+                         FriendEnterBlockName = "请输入您要阻止的人员的姓名.",
+                         AddMentor = "添加师傅",
+                         RemoveMentorMentee = "删除导师/门徒",
+                         MentorRequests = "允许/拒绝师傅请求",
+                         MentorEnterName = "请输入您希望成为师傅的姓名。",
+                         RestedBuff = "休息了{0}{1}%增加经验值的{2}",
+
+                         ItemTypeWeapon = "武器",
+                         ItemTypeArmour = "盔甲",
+                         ItemTypeHelmet = "头盔",
+                         ItemTypeNecklace = "项链",
+                         ItemTypeBracelet = "手镯",
+                         ItemTypeRing = "戒指",
+                         ItemTypeAmulet = "施法材料",
+                         ItemTypeBelt = "腰带",
+                         ItemTypeBoots = "靴子",
+                         ItemTypeStone = "守护石",
+                         ItemTypeTorch = "火光",
+                         ItemTypePotion = "药水",
+                         ItemTypeOre = "矿石",
+                         ItemTypeMeat = "肉类",
+                         ItemTypeCraftingMaterial = "工艺材料",
+                         ItemTypeScroll = "卷轴",
+                         ItemTypeGem = "宝石",
+                         ItemTypeMount = "坐骑",
+                         ItemTypeBook = "书",
+                         ItemTypeScript = "工具",
+                         ItemTypeReins = "缰绳",
+                         ItemTypeBells = "铃铛",
+                         ItemTypeSaddle = "马鞍",
+                         ItemTypeRibbon = "丝带",
+                         ItemTypeMask = "面具",
+                         ItemTypeFood = "食物",
+                         ItemTypeHook = "鱼钩",
+                         ItemTypeFloat = "鱼漂",
+                         ItemTypeBait = "鱼饵",
+                         ItemTypeFinder = "探鱼器",
+                         ItemTypeReel = "摇轮",
+                         ItemTypeFish = "鱼",
+                         ItemTypeQuest = "任务",
+                         ItemTypeAwakening = "雕文",
+                         ItemTypePets = "宝物",
+                         ItemTypeTransform = "时装",
+
+                         ItemGradeCommon = "普通",
+                         ItemGradeRare = "稀有",
+                         ItemGradeLegendary = "传奇",
+                         ItemGradeMythical = "神话",
+                         ItemGradeUncommon = "非凡",
+
+
+                         ItemGradeUnique = "罕见",
+                    
+               
+                        ItemGradeSet = "配套",
+
+
+
+
+
+
+
+                         NoAccountID = "帐户ID不存在..",
+                         IncorrectPasswordAccountID = "密码和帐户ID组合不正确.",
+                         GroupSwitch = "允许/不允许组请求",
+                         GroupAdd = "添加",
+                         GroupRemove = "删除",
+                         GroupAddEnterName = "请输入您要添加的人的姓名.",
+                         GroupRemoveEnterName = "输入要删除的人的姓名.",
+                         TooHeavyToHold = "太重了，拿不上.",
+                         SwitchMarriage = "允许/阻止结婚",
+                         RequestMarriage = "请求结婚",
+                         RequestDivorce = "请求离婚",
+                         MailLover = "邮件恋人",
+                         WhisperLover = "密语恋人";
+
+
+    //Server
+    public static string Welcome = "欢迎来到{0}的传奇服务器。",
+                         OnlinePlayers = "在线玩家: {0}",
+                         WeaponLuck = "你的武器受到祝福.",
+                         WeaponCurse = "你的武器受到诅咒",
+                         WeaponNoEffect = "没有效果.",
+                         InventoryIncreased = "增加包裹大小.",
+                         FaceToTrade = "您必须面对别人贸易.",
+                         NoTownTeleport = "这里不能使用城镇传送",
+                         CanNotRandom = "你不能使用随机传送",
+                         CanNotDungeon = "您不能在此处使用地牢逃生",
+                         CannotResurrection = "死亡后才能使用复活卷轴",
+                         CanNotDrop = "你不能把物品扔在此地图上",
+                         NewMail = "新邮件已到达.",
+                         CouldNotFindPlayer = "找不到玩家 {0}",
+                         BeenPoisoned = "你中毒了",
+                         AllowingMentorRequests = "您现在允许师傅的请求.",
+                         BlockingMentorRequests = "你现在阻止师傅的请求.";
+
+    //common
+    public static string LowLevel = "你的等级不够.",
+                         LowGold = "没有足够的金币.",
+                         LevelUp = "恭喜你!你已经升级了。你的HP和MP已经恢复.",
+                         LowDC = "你的攻击不够.",
+                         LowMC = "你的魔法不够.",
+                         LowSC = "你的道术不够.",
+                         GameName = "Legend of Mir2",
+                         ExpandedStorageExpiresOn = "扩展存储到期",
+
+                         NotFemale = "你不是女性.",
+                         NotMale = "你不是男性.",
+                         NotInGuild = "你不在行会里",
+                         NoMentorship = "你目前没有取消的师傅.";
+
+
+    public static void LoadClientLanguage(string languageIniPath)
+    {
+        if (!File.Exists(languageIniPath))
+        {
+            SaveClientLanguage(languageIniPath);
+            return;
+        }
+        InIReader reader = new InIReader(languageIniPath);
+        GameLanguage.PetMode_Both = reader.ReadString("Language", "PetMode_Both", GameLanguage.PetMode_Both);
+        GameLanguage.PetMode_MoveOnly = reader.ReadString("Language", "PetMode_MoveOnly", GameLanguage.PetMode_MoveOnly);
+        GameLanguage.PetMode_AttackOnly = reader.ReadString("Language", "PetMode_AttackOnly", GameLanguage.PetMode_AttackOnly);
+        GameLanguage.PetMode_None = reader.ReadString("Language", "PetMode_None", GameLanguage.PetMode_None);
+
+        GameLanguage.AttackMode_Peace = reader.ReadString("Language", "AttackMode_Peace", GameLanguage.AttackMode_Peace);
+        GameLanguage.AttackMode_Group = reader.ReadString("Language", "AttackMode_Group", GameLanguage.AttackMode_Group);
+        GameLanguage.AttackMode_Guild = reader.ReadString("Language", "AttackMode_Guild", GameLanguage.AttackMode_Guild);
+        GameLanguage.AttackMode_EnemyGuild = reader.ReadString("Language", "AttackMode_EnemyGuild", GameLanguage.AttackMode_EnemyGuild);
+        GameLanguage.AttackMode_RedBrown = reader.ReadString("Language", "AttackMode_RedBrown", GameLanguage.AttackMode_RedBrown);
+        GameLanguage.AttackMode_All = reader.ReadString("Language", "AttackMode_All", GameLanguage.AttackMode_All);
+
+        GameLanguage.LogOutTip = reader.ReadString("Language", "LogOutTip", GameLanguage.LogOutTip);
+        GameLanguage.ExitTip = reader.ReadString("Language", "ExitTip", GameLanguage.ExitTip);
+        GameLanguage.DiedTip = reader.ReadString("Language", "DiedTip", GameLanguage.DiedTip);
+        GameLanguage.DropTip = reader.ReadString("Language", "DropTip", GameLanguage.DropTip);
+
+        GameLanguage.Inventory = reader.ReadString("Language", "Inventory", GameLanguage.Inventory);
+        GameLanguage.Character = reader.ReadString("Language", "Character", GameLanguage.Character);
+        GameLanguage.Skills = reader.ReadString("Language", "Skills", GameLanguage.Skills);
+        GameLanguage.Quests = reader.ReadString("Language", "Quests", GameLanguage.Quests);
+        GameLanguage.Options = reader.ReadString("Language", "Options", GameLanguage.Options);
+        GameLanguage.Menu = reader.ReadString("Language", "Menu", GameLanguage.Menu);
+        GameLanguage.GameShop = reader.ReadString("Language", "GameShop", GameLanguage.GameShop);
+        GameLanguage.BigMap = reader.ReadString("Language", "BigMap", GameLanguage.BigMap);
+        GameLanguage.DuraPanel = reader.ReadString("Language", "DuraPanel", GameLanguage.DuraPanel);
+        GameLanguage.Mail = reader.ReadString("Language", "Mail", GameLanguage.Mail);
+        GameLanguage.Exit = reader.ReadString("Language", "Exit", GameLanguage.Exit);
+        GameLanguage.LogOut = reader.ReadString("Language", "LogOut", GameLanguage.LogOut);
+        GameLanguage.Help = reader.ReadString("Language", "Help", GameLanguage.Help);
+        GameLanguage.Keybinds = reader.ReadString("Language", "Keybinds", GameLanguage.Keybinds);
+        GameLanguage.Ranking = reader.ReadString("Language", "Ranking", GameLanguage.Ranking);
+        GameLanguage.Creatures = reader.ReadString("Language", "Creatures", GameLanguage.Creatures);
+        GameLanguage.Mount = reader.ReadString("Language", "Mount", GameLanguage.Mount);
+        GameLanguage.Fishing = reader.ReadString("Language", "Fishing", GameLanguage.Fishing);
+        GameLanguage.Friends = reader.ReadString("Language", "Friends", GameLanguage.Friends);
+        GameLanguage.Mentor = reader.ReadString("Language", "Mentor", GameLanguage.Mentor);
+        GameLanguage.Relationship = reader.ReadString("Language", "Relationship", GameLanguage.Relationship);
+        GameLanguage.Groups = reader.ReadString("Language", "Groups", GameLanguage.Groups);
+        GameLanguage.Guild = reader.ReadString("Language", "Guild", GameLanguage.Guild);
+        GameLanguage.Trade = reader.ReadString("Language", "Trade", GameLanguage.Trade);
+        GameLanguage.Size = reader.ReadString("Language", "Size", GameLanguage.Size);
+        GameLanguage.ChatSettings = reader.ReadString("Language", "ChatSettings", GameLanguage.ChatSettings);
+        GameLanguage.Rotate = reader.ReadString("Language", "Rotate", GameLanguage.Rotate);
+        GameLanguage.Close = reader.ReadString("Language", "Close", GameLanguage.Close);
+        GameLanguage.GameMaster = reader.ReadString("Language", "GameMaster", GameLanguage.GameMaster);
+        GameLanguage.Expire = reader.ReadString("Language", "Expire", GameLanguage.Expire);
+        GameLanguage.ExpireNever = reader.ReadString("Language", "ExpireNever", GameLanguage.ExpireNever);
+        GameLanguage.Never = reader.ReadString("Language", "Never", GameLanguage.Never);
+
+        GameLanguage.PatchErr = reader.ReadString("Language", "PatchErr", GameLanguage.PatchErr);
+        GameLanguage.LastOnline = reader.ReadString("Language", "LastOnline", GameLanguage.LastOnline);
+
+        GameLanguage.LowLevel = reader.ReadString("Language", "LowLevel", GameLanguage.LowLevel);
+        GameLanguage.LowGold = reader.ReadString("Language", "LowGold", GameLanguage.LowGold);
+        GameLanguage.LowDC = reader.ReadString("Language", "LowDC", GameLanguage.LowDC);
+        GameLanguage.LowMC = reader.ReadString("Language", "LowMC", GameLanguage.LowMC);
+        GameLanguage.LowSC = reader.ReadString("Language", "LowSC", GameLanguage.LowSC);
+
+        GameLanguage.Gold = reader.ReadString("Language", "Gold", GameLanguage.Gold);
+        GameLanguage.Credit = reader.ReadString("Language", "Credit", GameLanguage.Credit);
+
+        GameLanguage.YouGained = reader.ReadString("Language", "YouGained", GameLanguage.YouGained);
+        GameLanguage.YouGained2 = reader.ReadString("Language", "YouGained2", GameLanguage.YouGained2);
+        GameLanguage.ExperienceGained = reader.ReadString("Language", "ExperienceGained", GameLanguage.ExperienceGained);
+        GameLanguage.LevelUp = reader.ReadString("Language", "LevelUp", GameLanguage.LevelUp);
+
+        GameLanguage.ItemDescription = reader.ReadString("Language", "ItemDescription", GameLanguage.ItemDescription);
+        GameLanguage.RequiredLevel = reader.ReadString("Language", "RequiredLevel", GameLanguage.RequiredLevel);
+        GameLanguage.RequiredDC = reader.ReadString("Language", "RequiredDC", GameLanguage.RequiredDC);
+        GameLanguage.RequiredMC = reader.ReadString("Language", "RequiredMC", GameLanguage.RequiredMC);
+        GameLanguage.RequiredSC = reader.ReadString("Language", "RequiredSC", GameLanguage.RequiredSC);
+        GameLanguage.ClassRequired = reader.ReadString("Language", "ClassRequired", GameLanguage.ClassRequired);
+        GameLanguage.Holy = reader.ReadString("Language", "Holy", GameLanguage.Holy);
+        GameLanguage.Holy2 = reader.ReadString("Language", "Holy2", GameLanguage.Holy2);
+        GameLanguage.Accuracy = reader.ReadString("Language", "Accuracy", GameLanguage.Accuracy);
+        GameLanguage.Accuracy2 = reader.ReadString("Language", "Accuracy2", GameLanguage.Accuracy2);
+        GameLanguage.Agility = reader.ReadString("Language", "Agility", GameLanguage.Agility);
+        GameLanguage.Agility2 = reader.ReadString("Language", "Agility2", GameLanguage.Agility2);
+        GameLanguage.DC = reader.ReadString("Language", "DC", GameLanguage.DC);
+        GameLanguage.DC2 = reader.ReadString("Language", "DC2", GameLanguage.DC2);
+        GameLanguage.MC = reader.ReadString("Language", "MC", GameLanguage.MC);
+        GameLanguage.MC2 = reader.ReadString("Language", "MC2", GameLanguage.MC2);
+        GameLanguage.SC = reader.ReadString("Language", "SC", GameLanguage.SC);
+        GameLanguage.SC2 = reader.ReadString("Language", "SC2", GameLanguage.SC2);
+        GameLanguage.Durability = reader.ReadString("Language", "Durability", GameLanguage.Durability);
+        GameLanguage.Weight = reader.ReadString("Language", "Weight", GameLanguage.Weight);
+        GameLanguage.AC = reader.ReadString("Language", "AC", GameLanguage.AC);
+        GameLanguage.AC2 = reader.ReadString("Language", "AC2", GameLanguage.AC2);
+        GameLanguage.MAC = reader.ReadString("Language", "MAC", GameLanguage.MAC);
+        GameLanguage.MAC2 = reader.ReadString("Language", "MAC2", GameLanguage.MAC2);
+        GameLanguage.Luck = reader.ReadString("Language", "Luck", GameLanguage.Luck);
+
+        GameLanguage.DeleteCharacter = reader.ReadString("Language", "DeleteCharacter", GameLanguage.DeleteCharacter);
+        GameLanguage.CharacterDeleted = reader.ReadString("Language", "CharacterDeleted", GameLanguage.CharacterDeleted);
+        GameLanguage.CharacterCreated = reader.ReadString("Language", "CharacterCreated", GameLanguage.CharacterCreated);
+
+        GameLanguage.Resolution = reader.ReadString("Language", "Resolution", GameLanguage.Resolution);
+        GameLanguage.Autostart = reader.ReadString("Language", "Autostart", GameLanguage.Autostart);
+        GameLanguage.Usrname = reader.ReadString("Language", "Usrname", GameLanguage.Usrname);
+        GameLanguage.Password = reader.ReadString("Language", "Password", GameLanguage.Password);
+
+        GameLanguage.ShuttingDown = reader.ReadString("Language", "ShuttingDown", GameLanguage.ShuttingDown);
+
+        GameLanguage.MaxCombine = reader.ReadString("Language", "MaxCombine", GameLanguage.MaxCombine);
+        GameLanguage.Count = reader.ReadString("Language", "Count", GameLanguage.Count);
+        GameLanguage.ExtraSlots8 = reader.ReadString("Language", "ExtraSlots8", GameLanguage.ExtraSlots8);
+        GameLanguage.ExtraSlots4 = reader.ReadString("Language", "ExtraSlots4", GameLanguage.ExtraSlots4);
+
+        GameLanguage.Chat_All = reader.ReadString("Language", "Chat_All", GameLanguage.Chat_All);
+        GameLanguage.Chat_Short = reader.ReadString("Language", "Chat_Short", GameLanguage.Chat_Short);
+        GameLanguage.Chat_Whisper = reader.ReadString("Language", "Chat_Whisper", GameLanguage.Chat_Whisper);
+        GameLanguage.Chat_Lover = reader.ReadString("Language", "Chat_Lover", GameLanguage.Chat_Lover);
+        GameLanguage.Chat_Mentor = reader.ReadString("Language", "Chat_Mentor", GameLanguage.Chat_Mentor);
+        GameLanguage.Chat_Group = reader.ReadString("Language", "Chat_Group", GameLanguage.Chat_Group);
+        GameLanguage.Chat_Guild = reader.ReadString("Language", "Chat_Guild", GameLanguage.Chat_Guild);
+        GameLanguage.ExpandedStorageLocked = reader.ReadString("Language", "ExpandedStorageLocked", GameLanguage.ExpandedStorageLocked);
+        GameLanguage.ExtraStorage = reader.ReadString("Language", "ExtraStorage", GameLanguage.ExtraStorage);
+        GameLanguage.ExtendYourRentalPeriod = reader.ReadString("Language", "ExtendYourRentalPeriod", GameLanguage.ExtendYourRentalPeriod);
+        GameLanguage.ExpandedStorageExpiresOn = reader.ReadString("Language", "ExpandedStorageExpiresOn", GameLanguage.ExpandedStorageExpiresOn);
+        GameLanguage.GameName = reader.ReadString("Language", "GameName", GameLanguage.GameName);
+        GameLanguage.CannotLeaveGame = reader.ReadString("Language", "CannotLeaveGame", GameLanguage.CannotLeaveGame);
+        GameLanguage.SelectKey = reader.ReadString("Language", "SelectKey", GameLanguage.SelectKey);
+        GameLanguage.WeaponSpiritFire = reader.ReadString("Language", "WeaponSpiritFire", GameLanguage.WeaponSpiritFire);
+        GameLanguage.SpiritsFireDisappeared = reader.ReadString("Language", "SpiritsFireDisappeared", GameLanguage.SpiritsFireDisappeared);
+        GameLanguage.WeddingRing = reader.ReadString("Language", "WeddingRing", GameLanguage.WeddingRing);
+        GameLanguage.WedRingName = reader.ReadString("Language", "WedRingName", GameLanguage.WedRingName);
+        GameLanguage.DropAmount = reader.ReadString("Language", "DropAmount", GameLanguage.DropAmount);
+        GameLanguage.LowMana = reader.ReadString("Language", "LowMana", GameLanguage.LowMana);
+
+        GameLanguage.NotFemale = reader.ReadString("Language", "NotFemale", GameLanguage.NotFemale);
+        GameLanguage.NotMale = reader.ReadString("Language", "NotMale", GameLanguage.NotMale);
+        GameLanguage.NoCreatures = reader.ReadString("Language", "NoCreatures", GameLanguage.NoCreatures);
+        GameLanguage.NoMount = reader.ReadString("Language", "NoMount", GameLanguage.NoMount);
+        GameLanguage.NoFishingRod = reader.ReadString("Language", "NoFishingRod", GameLanguage.NoFishingRod);
+        GameLanguage.NotInGuild = reader.ReadString("Language", "NotInGuild", GameLanguage.NotInGuild);
+        GameLanguage.AttemptingConnect = reader.ReadString("Language", "AttemptingConnect", GameLanguage.AttemptingConnect);
+
+        GameLanguage.CreatingCharactersDisabled = reader.ReadString("Language", "CreatingCharactersDisabled", GameLanguage.CreatingCharactersDisabled);
+        GameLanguage.InvalidCharacterName = reader.ReadString("Language", "InvalidCharacterName", GameLanguage.InvalidCharacterName);
+        GameLanguage.NoClass = reader.ReadString("Language", "NoClass", GameLanguage.NoClass);
+        GameLanguage.ToManyCharacters = reader.ReadString("Language", "ToManyCharacters", GameLanguage.ToManyCharacters);
+        GameLanguage.CharacterNameExists = reader.ReadString("Language", "CharacterNameExists", GameLanguage.CharacterNameExists);
+
+        GameLanguage.WarriorsDes = reader.ReadString("Language", "WarriorsDes", GameLanguage.WarriorsDes);
+        GameLanguage.WizardDes = reader.ReadString("Language", "WizardDes", GameLanguage.WizardDes);
+        GameLanguage.TaoistDes = reader.ReadString("Language", "TaoistDes", GameLanguage.TaoistDes);
+        GameLanguage.AssassinDes = reader.ReadString("Language", "AssassinDes", GameLanguage.AssassinDes);
+        GameLanguage.ArcherDes = reader.ReadString("Language", "ArcherDes", GameLanguage.ArcherDes);
+
+        GameLanguage.DateSent = reader.ReadString("Language", "DateSent", GameLanguage.DateSent);
+        GameLanguage.Send = reader.ReadString("Language", "Send", GameLanguage.Send);
+        GameLanguage.Reply = reader.ReadString("Language", "Reply", GameLanguage.Reply);
+        GameLanguage.Read = reader.ReadString("Language", "Read", GameLanguage.Read);
+        GameLanguage.Delete = reader.ReadString("Language", "Delete", GameLanguage.Delete);
+        GameLanguage.BlockList = reader.ReadString("Language", "BlockList", GameLanguage.BlockList);
+        GameLanguage.EnterMailToName = reader.ReadString("Language", "EnterMailToName", GameLanguage.EnterMailToName);
+        GameLanguage.BeenPoisoned = reader.ReadString("Language", "BeenPoisoned", GameLanguage.BeenPoisoned);
+        GameLanguage.AddFriend = reader.ReadString("Language", "AddFriend", GameLanguage.AddFriend);
+        GameLanguage.RemoveFriend = reader.ReadString("Language", "RemoveFriend", GameLanguage.RemoveFriend);
+        GameLanguage.FriendMemo = reader.ReadString("Language", "FriendMemo", GameLanguage.FriendMemo);
+        GameLanguage.FriendMail = reader.ReadString("Language", "FriendMail", GameLanguage.FriendMail);
+        GameLanguage.FriendWhisper = reader.ReadString("Language", "FriendWhisper", GameLanguage.FriendWhisper);
+        GameLanguage.FriendEnterAddName = reader.ReadString("Language", "FriendEnterAddName", GameLanguage.FriendEnterAddName);
+        GameLanguage.FriendEnterBlockName = reader.ReadString("Language", "FriendEnterBlockName", GameLanguage.FriendEnterBlockName);
+        GameLanguage.AddMentor = reader.ReadString("Language", "AddMentor", GameLanguage.AddMentor);
+        GameLanguage.RemoveMentorMentee = reader.ReadString("Language", "RemoveMentorMentee", GameLanguage.RemoveMentorMentee);
+        GameLanguage.MentorRequests = reader.ReadString("Language", "MentorRequests", GameLanguage.MentorRequests);
+        GameLanguage.MentorEnterName = reader.ReadString("Language", "MentorEnterName", GameLanguage.MentorEnterName);
+        GameLanguage.NoMentorship = reader.ReadString("Language", "NoMentorship", GameLanguage.NoMentorship);
+        GameLanguage.RestedBuff = reader.ReadString("Language", "RestedBuff", GameLanguage.RestedBuff);
+
+        GameLanguage.ItemTypeWeapon = reader.ReadString("Language", "ItemTypeWeapon", GameLanguage.ItemTypeWeapon);
+        GameLanguage.ItemTypeArmour = reader.ReadString("Language", "ItemTypeArmour", GameLanguage.ItemTypeArmour);
+        GameLanguage.ItemTypeHelmet = reader.ReadString("Language", "ItemTypeHelmet", GameLanguage.ItemTypeHelmet);
+        GameLanguage.ItemTypeNecklace = reader.ReadString("Language", "ItemTypeNecklace", GameLanguage.ItemTypeNecklace);
+        GameLanguage.ItemTypeBracelet = reader.ReadString("Language", "ItemTypeBracelet", GameLanguage.ItemTypeBracelet);
+        GameLanguage.ItemTypeRing = reader.ReadString("Language", "ItemTypeRing", GameLanguage.ItemTypeRing);
+        GameLanguage.ItemTypeAmulet = reader.ReadString("Language", "ItemTypeAmulet", GameLanguage.ItemTypeAmulet);
+        GameLanguage.ItemTypeBelt = reader.ReadString("Language", "ItemTypeBelt", GameLanguage.ItemTypeBelt);
+        GameLanguage.ItemTypeBoots = reader.ReadString("Language", "ItemTypeBoots", GameLanguage.ItemTypeBoots);
+        GameLanguage.ItemTypeStone = reader.ReadString("Language", "ItemTypeStone", GameLanguage.ItemTypeStone);
+        GameLanguage.ItemTypeTorch = reader.ReadString("Language", "ItemTypeTorch", GameLanguage.ItemTypeTorch);
+        GameLanguage.ItemTypePotion = reader.ReadString("Language", "ItemTypePotion", GameLanguage.ItemTypePotion);
+        GameLanguage.ItemTypeOre = reader.ReadString("Language", "ItemTypeOre", GameLanguage.ItemTypeOre);
+        GameLanguage.ItemTypeMeat = reader.ReadString("Language", "ItemTypeMeat", GameLanguage.ItemTypeMeat);
+        GameLanguage.ItemTypeCraftingMaterial = reader.ReadString("Language", "ItemTypeCraftingMaterial", GameLanguage.ItemTypeCraftingMaterial);
+        GameLanguage.ItemTypeScroll = reader.ReadString("Language", "ItemTypeScroll", GameLanguage.ItemTypeScroll);
+        GameLanguage.ItemTypeGem = reader.ReadString("Language", "ItemTypeGem", GameLanguage.ItemTypeGem);
+        GameLanguage.ItemTypeMount = reader.ReadString("Language", "ItemTypeMount", GameLanguage.ItemTypeMount);
+        GameLanguage.ItemTypeBook = reader.ReadString("Language", "ItemTypeBook", GameLanguage.ItemTypeBook);
+        GameLanguage.ItemTypeScript = reader.ReadString("Language", "ItemTypeScript", GameLanguage.ItemTypeScript);
+        GameLanguage.ItemTypeReins = reader.ReadString("Language", "ItemTypeReins", GameLanguage.ItemTypeReins);
+        GameLanguage.ItemTypeBells = reader.ReadString("Language", "ItemTypeBells", GameLanguage.ItemTypeBells);
+        GameLanguage.ItemTypeSaddle = reader.ReadString("Language", "ItemTypeSaddle", GameLanguage.ItemTypeSaddle);
+        GameLanguage.ItemTypeRibbon = reader.ReadString("Language", "ItemTypeRibbon", GameLanguage.ItemTypeRibbon);
+        GameLanguage.ItemTypeMask = reader.ReadString("Language", "ItemTypeMask", GameLanguage.ItemTypeMask);
+        GameLanguage.ItemTypeFood = reader.ReadString("Language", "ItemTypeFood", GameLanguage.ItemTypeFood);
+        GameLanguage.ItemTypeHook = reader.ReadString("Language", "ItemTypeHook", GameLanguage.ItemTypeHook);
+        GameLanguage.ItemTypeFloat = reader.ReadString("Language", "ItemTypeFloat", GameLanguage.ItemTypeFloat);
+        GameLanguage.ItemTypeBait = reader.ReadString("Language", "ItemTypeBait", GameLanguage.ItemTypeBait);
+        GameLanguage.ItemTypeFinder = reader.ReadString("Language", "ItemTypeFinder", GameLanguage.ItemTypeFinder);
+        GameLanguage.ItemTypeReel = reader.ReadString("Language", "ItemTypeReel", GameLanguage.ItemTypeReel);
+        GameLanguage.ItemTypeFish = reader.ReadString("Language", "ItemTypeFish", GameLanguage.ItemTypeFish);
+        GameLanguage.ItemTypeQuest = reader.ReadString("Language", "ItemTypeQuest", GameLanguage.ItemTypeQuest);
+        GameLanguage.ItemTypeAwakening = reader.ReadString("Language", "ItemTypeAwakening", GameLanguage.ItemTypeAwakening);
+        GameLanguage.ItemTypePets = reader.ReadString("Language", "ItemTypePets", GameLanguage.ItemTypePets);
+        GameLanguage.ItemTypeTransform = reader.ReadString("Language", "ItemTypeTransform", GameLanguage.ItemTypeTransform);
+
+        GameLanguage.ItemGradeCommon = reader.ReadString("Language", "ItemGradeCommon", GameLanguage.ItemGradeCommon);
+        GameLanguage.ItemGradeRare = reader.ReadString("Language", "ItemGradeRare", GameLanguage.ItemGradeRare);
+        GameLanguage.ItemGradeLegendary = reader.ReadString("Language", "ItemGradeLegendary", GameLanguage.ItemGradeLegendary);
+        GameLanguage.ItemGradeMythical = reader.ReadString("Language", "ItemGradeMythical", GameLanguage.ItemGradeMythical);
+        GameLanguage.ItemGradeUncommon = reader.ReadString("Language", "ItemGradeUncommon", GameLanguage.ItemGradeUncommon);
+        GameLanguage.ItemGradeUnique = reader.ReadString("Language", "ItemGradeUnique", GameLanguage.ItemGradeUnique);
+        GameLanguage.ItemGradeSet = reader.ReadString("Language", "ItemGradeSet", GameLanguage.ItemGradeSet);
+
+        GameLanguage.NoAccountID = reader.ReadString("Language", "NoAccountID", GameLanguage.NoAccountID);
+        GameLanguage.IncorrectPasswordAccountID = reader.ReadString("Language", "IncorrectPasswordAccountID", GameLanguage.IncorrectPasswordAccountID);
+        GameLanguage.GroupSwitch = reader.ReadString("Language", "GroupSwitch", GameLanguage.GroupSwitch);
+        GameLanguage.GroupAdd = reader.ReadString("Language", "GroupAdd", GameLanguage.GroupAdd);
+        GameLanguage.GroupRemove = reader.ReadString("Language", "GroupRemove", GameLanguage.GroupRemove);
+        GameLanguage.GroupAddEnterName = reader.ReadString("Language", "GroupAddEnterName", GameLanguage.GroupAddEnterName);
+        GameLanguage.GroupRemoveEnterName = reader.ReadString("Language", "GroupRemoveEnterName", GameLanguage.GroupRemoveEnterName);
+        GameLanguage.TooHeavyToHold = reader.ReadString("Language", "TooHeavyToHold", GameLanguage.TooHeavyToHold);
+        GameLanguage.SwitchMarriage = reader.ReadString("Language", "SwitchMarriage", GameLanguage.SwitchMarriage);
+        GameLanguage.RequestMarriage = reader.ReadString("Language", "RequestMarriage", GameLanguage.RequestMarriage);
+        GameLanguage.RequestDivorce = reader.ReadString("Language", "RequestDivorce", GameLanguage.RequestDivorce);
+        GameLanguage.MailLover = reader.ReadString("Language", "MailLover", GameLanguage.MailLover);
+        GameLanguage.WhisperLover = reader.ReadString("Language", "WhisperLover", GameLanguage.WhisperLover);
+    }
+
+
+    public static void SaveClientLanguage(string languageIniPath)
+    {
+        File.Delete(languageIniPath);
+        InIReader reader = new InIReader(languageIniPath);
+        reader.Write("Language", "PetMode_Both", GameLanguage.PetMode_Both);
+        reader.Write("Language", "PetMode_MoveOnly", GameLanguage.PetMode_MoveOnly);
+        reader.Write("Language", "PetMode_AttackOnly", GameLanguage.PetMode_AttackOnly);
+        reader.Write("Language", "PetMode_None", GameLanguage.PetMode_None);
+
+        reader.Write("Language", "AttackMode_Peace", GameLanguage.AttackMode_Peace);
+        reader.Write("Language", "AttackMode_Group", GameLanguage.AttackMode_Group);
+        reader.Write("Language", "AttackMode_Guild", GameLanguage.AttackMode_Guild);
+        reader.Write("Language", "AttackMode_EnemyGuild", GameLanguage.AttackMode_EnemyGuild);
+        reader.Write("Language", "AttackMode_RedBrown", GameLanguage.AttackMode_RedBrown);
+        reader.Write("Language", "AttackMode_All", GameLanguage.AttackMode_All);
+
+        reader.Write("Language", "LogOutTip", GameLanguage.LogOutTip);
+        reader.Write("Language", "ExitTip", GameLanguage.ExitTip);
+        reader.Write("Language", "DiedTip", GameLanguage.DiedTip);
+        reader.Write("Language", "DropTip", GameLanguage.DropTip);
+
+        reader.Write("Language", "Inventory", GameLanguage.Inventory);
+        reader.Write("Language", "Character", GameLanguage.Character);
+        reader.Write("Language", "Skills", GameLanguage.Skills);
+        reader.Write("Language", "Quests", GameLanguage.Quests);
+        reader.Write("Language", "Options", GameLanguage.Options);
+        reader.Write("Language", "Menu", GameLanguage.Menu);
+        reader.Write("Language", "GameShop", GameLanguage.GameShop);
+        reader.Write("Language", "BigMap", GameLanguage.BigMap);
+        reader.Write("Language", "DuraPanel", GameLanguage.DuraPanel);
+        reader.Write("Language", "Mail", GameLanguage.Mail);
+        reader.Write("Language", "Exit", GameLanguage.Exit);
+        reader.Write("Language", "LogOut", GameLanguage.LogOut);
+        reader.Write("Language", "Help", GameLanguage.Help);
+        reader.Write("Language", "Keybinds", GameLanguage.Keybinds);
+        reader.Write("Language", "Ranking", GameLanguage.Ranking);
+        reader.Write("Language", "Creatures", GameLanguage.Creatures);
+        reader.Write("Language", "Mount", GameLanguage.Mount);
+        reader.Write("Language", "Fishing", GameLanguage.Fishing);
+        reader.Write("Language", "Friends", GameLanguage.Friends);
+        reader.Write("Language", "Mentor", GameLanguage.Mentor);
+        reader.Write("Language", "Relationship", GameLanguage.Relationship);
+        reader.Write("Language", "Groups", GameLanguage.Groups);
+        reader.Write("Language", "Guild", GameLanguage.Guild);
+        reader.Write("Language", "Trade", GameLanguage.Trade);
+        reader.Write("Language", "Size", GameLanguage.Size);
+        reader.Write("Language", "ChatSettings", GameLanguage.ChatSettings);
+        reader.Write("Language", "Rotate", GameLanguage.Rotate);
+        reader.Write("Language", "Close", GameLanguage.Close);
+        reader.Write("Language", "GameMaster", GameLanguage.GameMaster);
+
+
+        reader.Write("Language", "Expire", GameLanguage.Expire);
+        reader.Write("Language", "ExpireNever", GameLanguage.ExpireNever);
+        reader.Write("Language", "Never", GameLanguage.Never);
+        reader.Write("Language", "PatchErr", GameLanguage.PatchErr);
+        reader.Write("Language", "LastOnline", GameLanguage.LastOnline);
+
+        reader.Write("Language", "LowLevel", GameLanguage.LowLevel);
+        reader.Write("Language", "LowGold", GameLanguage.LowGold);
+        reader.Write("Language", "LowDC", GameLanguage.LowDC);
+        reader.Write("Language", "LowMC", GameLanguage.LowMC);
+        reader.Write("Language", "LowSC", GameLanguage.LowSC);
+
+        reader.Write("Language", "Gold", GameLanguage.Gold);
+        reader.Write("Language", "Credit", GameLanguage.Credit);
+
+        reader.Write("Language", "YouGained", GameLanguage.YouGained);
+        reader.Write("Language", "YouGained2", GameLanguage.YouGained2);
+        reader.Write("Language", "ExperienceGained", GameLanguage.ExperienceGained);
+        reader.Write("Language", "LevelUp", GameLanguage.LevelUp);
+
+        reader.Write("Language", "ItemDescription", GameLanguage.ItemDescription);
+        reader.Write("Language", "RequiredLevel", GameLanguage.RequiredLevel);
+        reader.Write("Language", "RequiredDC", GameLanguage.RequiredDC);
+        reader.Write("Language", "RequiredMC", GameLanguage.RequiredMC);
+        reader.Write("Language", "RequiredSC", GameLanguage.RequiredSC);
+        reader.Write("Language", "ClassRequired", GameLanguage.ClassRequired);
+        reader.Write("Language", "Holy", GameLanguage.Holy);
+        reader.Write("Language", "Accuracy", GameLanguage.Accuracy);
+        reader.Write("Language", "Agility", GameLanguage.Agility);
+        reader.Write("Language", "DC", GameLanguage.DC);
+        reader.Write("Language", "MC", GameLanguage.MC);
+        reader.Write("Language", "SC", GameLanguage.SC);
+        reader.Write("Language", "Durability", GameLanguage.Durability);
+        reader.Write("Language", "Weight", GameLanguage.Weight);
+        reader.Write("Language", "AC", GameLanguage.AC);
+        reader.Write("Language", "MAC", GameLanguage.MAC);
+        reader.Write("Language", "Luck", GameLanguage.Luck);
+
+        reader.Write("Language", "DeleteCharacter", GameLanguage.DeleteCharacter);
+        reader.Write("Language", "CharacterDeleted", GameLanguage.CharacterDeleted);
+        reader.Write("Language", "CharacterCreated", GameLanguage.CharacterCreated);
+
+        reader.Write("Language", "Resolution", GameLanguage.Resolution);
+        reader.Write("Language", "Autostart", GameLanguage.Autostart);
+        reader.Write("Language", "Usrname", GameLanguage.Usrname);
+        reader.Write("Language", "Password", GameLanguage.Password);
+
+        reader.Write("Language", "ShuttingDown", GameLanguage.ShuttingDown);
+
+        reader.Write("Language", "MaxCombine", GameLanguage.MaxCombine);
+        reader.Write("Language", "Count", GameLanguage.Count);
+        reader.Write("Language", "ExtraSlots8", GameLanguage.ExtraSlots8);
+        reader.Write("Language", "ExtraSlots4", GameLanguage.ExtraSlots4);
+
+        reader.Write("Language", "Chat_All", GameLanguage.Chat_All);
+        reader.Write("Language", "Chat_Short", GameLanguage.Chat_Short);
+        reader.Write("Language", "Chat_Whisper", GameLanguage.Chat_Whisper);
+        reader.Write("Language", "Chat_Lover", GameLanguage.Chat_Lover);
+        reader.Write("Language", "Chat_Mentor", GameLanguage.Chat_Mentor);
+        reader.Write("Language", "Chat_Group", GameLanguage.Chat_Group);
+        reader.Write("Language", "Chat_Guild", GameLanguage.Chat_Guild);
+        reader.Write("Language", "ExpandedStorageLocked", GameLanguage.ExpandedStorageLocked);
+        reader.Write("Language", "ExtraStorage", GameLanguage.ExtraStorage);
+        reader.Write("Language", "ExtendYourRentalPeriod", GameLanguage.ExtendYourRentalPeriod);
+        reader.Write("Language", "ExpandedStorageExpiresOn", GameLanguage.ExpandedStorageExpiresOn);
+        reader.Write("Language", "GameName", GameLanguage.GameName);
+        reader.Write("Language", "CannotLeaveGame", GameLanguage.CannotLeaveGame);
+        reader.Write("Language", "SelectKey", GameLanguage.SelectKey);
+        reader.Write("Language", "WeaponSpiritFire", GameLanguage.WeaponSpiritFire);
+        reader.Write("Language", "SpiritsFireDisappeared", GameLanguage.SpiritsFireDisappeared);
+        reader.Write("Language", "WeddingRing", GameLanguage.WeddingRing);
+        reader.Write("Language", "WedRingName", GameLanguage.WedRingName);
+        reader.Write("Language", "DropAmount", GameLanguage.DropAmount);
+        reader.Write("Language", "LowMana", GameLanguage.LowMana);
+
+        reader.Write("Language", "NotFemale", GameLanguage.NotFemale);
+        reader.Write("Language", "NotMale", GameLanguage.NotMale);
+        reader.Write("Language", "NoCreatures", GameLanguage.NoCreatures);
+        reader.Write("Language", "NoMount", GameLanguage.NoMount);
+        reader.Write("Language", "NoFishingRod", GameLanguage.NoFishingRod);
+        reader.Write("Language", "NotInGuild", GameLanguage.NotInGuild);
+        reader.Write("Language", "AttemptingConnect", GameLanguage.AttemptingConnect);
+
+        reader.Write("Language", "CreatingCharactersDisabled", GameLanguage.CreatingCharactersDisabled);
+        reader.Write("Language", "InvalidCharacterName", GameLanguage.InvalidCharacterName);
+        reader.Write("Language", "NoClass", GameLanguage.NoClass);
+        reader.Write("Language", "ToManyCharacters", GameLanguage.ToManyCharacters);
+        reader.Write("Language", "CharacterNameExists", GameLanguage.CharacterNameExists);
+
+        reader.Write("Language", "WarriorsDes", GameLanguage.WarriorsDes);
+        reader.Write("Language", "WizardDes", GameLanguage.WizardDes);
+        reader.Write("Language", "TaoistDes", GameLanguage.TaoistDes);
+        reader.Write("Language", "AssassinDes", GameLanguage.AssassinDes);
+        reader.Write("Language", "ArcherDes", GameLanguage.ArcherDes);
+
+        reader.Write("Language", "DateSent", GameLanguage.DateSent);
+        reader.Write("Language", "Send", GameLanguage.Send);
+        reader.Write("Language", "Reply", GameLanguage.Reply);
+        reader.Write("Language", "Read", GameLanguage.Read);
+        reader.Write("Language", "Delete", GameLanguage.Delete);
+        reader.Write("Language", "BlockList", GameLanguage.BlockList);
+        reader.Write("Language", "EnterMailToName", GameLanguage.EnterMailToName);
+        reader.Write("Language", "BeenPoisoned", GameLanguage.BeenPoisoned);
+        reader.Write("Language", "AddFriend", GameLanguage.AddFriend);
+        reader.Write("Language", "RemoveFriend", GameLanguage.RemoveFriend);
+        reader.Write("Language", "FriendMemo", GameLanguage.FriendMemo);
+        reader.Write("Language", "FriendMail", GameLanguage.FriendMail);
+        reader.Write("Language", "FriendWhisper", GameLanguage.FriendWhisper);
+        reader.Write("Language", "FriendEnterAddName", GameLanguage.FriendEnterAddName);
+        reader.Write("Language", "FriendEnterBlockName", GameLanguage.FriendEnterBlockName);
+        reader.Write("Language", "AddMentor", GameLanguage.AddMentor);
+        reader.Write("Language", "RemoveMentorMentee", GameLanguage.RemoveMentorMentee);
+        reader.Write("Language", "MentorRequests", GameLanguage.MentorRequests);
+        reader.Write("Language", "MentorEnterName", GameLanguage.MentorEnterName);
+        reader.Write("Language", "NoMentorship", GameLanguage.NoMentorship);
+        reader.Write("Language", "RestedBuff", GameLanguage.RestedBuff);
+
+        reader.Write("Language", "ItemTypeWeapon", GameLanguage.ItemTypeWeapon);
+        reader.Write("Language", "ItemTypeArmour", GameLanguage.ItemTypeArmour);
+        reader.Write("Language", "ItemTypeHelmet", GameLanguage.ItemTypeHelmet);
+        reader.Write("Language", "ItemTypeNecklace", GameLanguage.ItemTypeNecklace);
+        reader.Write("Language", "ItemTypeBracelet", GameLanguage.ItemTypeBracelet);
+        reader.Write("Language", "ItemTypeRing", GameLanguage.ItemTypeRing);
+        reader.Write("Language", "ItemTypeAmulet", GameLanguage.ItemTypeAmulet);
+        reader.Write("Language", "ItemTypeBelt", GameLanguage.ItemTypeBelt);
+        reader.Write("Language", "ItemTypeBoots", GameLanguage.ItemTypeBoots);
+        reader.Write("Language", "ItemTypeStone", GameLanguage.ItemTypeStone);
+        reader.Write("Language", "ItemTypeTorch", GameLanguage.ItemTypeTorch);
+        reader.Write("Language", "ItemTypePotion", GameLanguage.ItemTypePotion);
+        reader.Write("Language", "ItemTypeOre", GameLanguage.ItemTypeOre);
+        reader.Write("Language", "ItemTypeMeat", GameLanguage.ItemTypeMeat);
+        reader.Write("Language", "ItemTypeCraftingMaterial", GameLanguage.ItemTypeCraftingMaterial);
+        reader.Write("Language", "ItemTypeScroll", GameLanguage.ItemTypeScroll);
+        reader.Write("Language", "ItemTypeGem", GameLanguage.ItemTypeGem);
+        reader.Write("Language", "ItemTypeMount", GameLanguage.ItemTypeMount);
+        reader.Write("Language", "ItemTypeBook", GameLanguage.ItemTypeBook);
+        reader.Write("Language", "ItemTypeScript", GameLanguage.ItemTypeScript);
+        reader.Write("Language", "ItemTypeReins", GameLanguage.ItemTypeReins);
+        reader.Write("Language", "ItemTypeBells", GameLanguage.ItemTypeBells);
+        reader.Write("Language", "ItemTypeSaddle", GameLanguage.ItemTypeSaddle);
+        reader.Write("Language", "ItemTypeRibbon", GameLanguage.ItemTypeRibbon);
+        reader.Write("Language", "ItemTypeMask", GameLanguage.ItemTypeMask);
+        reader.Write("Language", "ItemTypeFood", GameLanguage.ItemTypeFood);
+        reader.Write("Language", "ItemTypeHook", GameLanguage.ItemTypeHook);
+        reader.Write("Language", "ItemTypeFloat", GameLanguage.ItemTypeFloat);
+        reader.Write("Language", "ItemTypeBait", GameLanguage.ItemTypeBait);
+        reader.Write("Language", "ItemTypeFinder", GameLanguage.ItemTypeFinder);
+        reader.Write("Language", "ItemTypeReel", GameLanguage.ItemTypeReel);
+        reader.Write("Language", "ItemTypeFish", GameLanguage.ItemTypeFish);
+        reader.Write("Language", "ItemTypeQuest", GameLanguage.ItemTypeQuest);
+        reader.Write("Language", "ItemTypeAwakening", GameLanguage.ItemTypeAwakening);
+        reader.Write("Language", "ItemTypePets", GameLanguage.ItemTypePets);
+        reader.Write("Language", "ItemTypeTransform", GameLanguage.ItemTypeTransform);
+
+        reader.Write("Language", "ItemGradeCommon", GameLanguage.ItemGradeCommon);
+        reader.Write("Language", "ItemGradeRare", GameLanguage.ItemGradeRare);
+        reader.Write("Language", "ItemGradeLegendary", GameLanguage.ItemGradeLegendary);
+        reader.Write("Language", "ItemGradeMythical", GameLanguage.ItemGradeMythical);
+        reader.Write("Language", "ItemGradeUncommon", GameLanguage.ItemGradeUncommon);
+        reader.Write("Language", "ItemGradeUnique", GameLanguage.ItemGradeUnique);
+        reader.Write("Language", "ItemGradeSet", GameLanguage.ItemGradeSet);
+
+        reader.Write("Language", "NoAccountID", GameLanguage.NoAccountID);
+        reader.Write("Language", "IncorrectPasswordAccountID", GameLanguage.IncorrectPasswordAccountID);
+        reader.Write("Language", "GroupSwitch", GameLanguage.GroupSwitch);
+        reader.Write("Language", "GroupAdd", GameLanguage.GroupAdd);
+        reader.Write("Language", "GroupRemove", GameLanguage.GroupRemove);
+        reader.Write("Language", "GroupAddEnterName", GameLanguage.GroupAddEnterName);
+        reader.Write("Language", "GroupRemoveEnterName", GameLanguage.GroupRemoveEnterName);
+        reader.Write("Language", "TooHeavyToHold", GameLanguage.TooHeavyToHold);
+        reader.Write("Language", "SwitchMarriage", GameLanguage.SwitchMarriage);
+        reader.Write("Language", "RequestMarriage", GameLanguage.RequestMarriage);
+        reader.Write("Language", "RequestDivorce", GameLanguage.RequestDivorce);
+        reader.Write("Language", "MailLover", GameLanguage.MailLover);
+        reader.Write("Language", "WhisperLover", GameLanguage.WhisperLover);
+    }
+
+
+    public static void LoadServerLanguage(string languageIniPath)
+    {
+        if (!File.Exists(languageIniPath))
+        {
+            SaveServerLanguage(languageIniPath);
+            return;
+        }
+        InIReader reader = new InIReader(languageIniPath);
+        GameLanguage.Welcome = reader.ReadString("Language", "Welcome", GameLanguage.Welcome);
+        GameLanguage.OnlinePlayers = reader.ReadString("Language", "OnlinePlayers", GameLanguage.OnlinePlayers);
+        GameLanguage.LowLevel = reader.ReadString("Language", "LowLevel", GameLanguage.LowLevel);
+        GameLanguage.LowGold = reader.ReadString("Language", "LowGold", GameLanguage.LowGold);
+        GameLanguage.LowDC = reader.ReadString("Language", "LowDC", GameLanguage.LowDC);
+        GameLanguage.LowMC = reader.ReadString("Language", "LowMC", GameLanguage.LowMC);
+        GameLanguage.LowSC = reader.ReadString("Language", "LowSC", GameLanguage.LowSC);
+
+        GameLanguage.LevelUp = reader.ReadString("Language", "LevelUp", GameLanguage.LevelUp);
+
+        GameLanguage.WeaponLuck = reader.ReadString("Language", "WeaponLuck", GameLanguage.WeaponLuck);
+        GameLanguage.WeaponCurse = reader.ReadString("Language", "WeaponCurse", GameLanguage.WeaponCurse);
+        GameLanguage.WeaponNoEffect = reader.ReadString("Language", "WeaponNoEffect", GameLanguage.WeaponNoEffect);
+
+        GameLanguage.InventoryIncreased = reader.ReadString("Language", "InventoryIncreased", GameLanguage.InventoryIncreased);
+        GameLanguage.ExpandedStorageExpiresOn = reader.ReadString("Language", "ExpandedStorageExpiresOn", GameLanguage.ExpandedStorageExpiresOn);
+        GameLanguage.GameName = reader.ReadString("Language", "GameName", GameLanguage.GameName);
+        GameLanguage.FaceToTrade = reader.ReadString("Language", "FaceToTrade", GameLanguage.FaceToTrade);
+        GameLanguage.NoTownTeleport = reader.ReadString("Language", "NoTownTeleport", GameLanguage.NoTownTeleport);
+        GameLanguage.CanNotRandom = reader.ReadString("Language", "CanNotRandom", GameLanguage.CanNotRandom);
+        GameLanguage.CanNotDungeon = reader.ReadString("Language", "CanNotDungeon", GameLanguage.CanNotDungeon);
+        GameLanguage.CannotResurrection = reader.ReadString("Language", "CannotResurrection", GameLanguage.CannotResurrection);
+        GameLanguage.CanNotDrop = reader.ReadString("Language", "CanNotDrop", GameLanguage.CanNotDrop);
+
+        GameLanguage.NotFemale = reader.ReadString("Language", "NotFemale", GameLanguage.NotFemale);
+        GameLanguage.NotMale = reader.ReadString("Language", "NotMale", GameLanguage.NotMale);
+        GameLanguage.NotInGuild = reader.ReadString("Language", "NotInGuild", GameLanguage.NotInGuild);
+        GameLanguage.NewMail = reader.ReadString("Language", "NewMail", GameLanguage.NewMail);
+        GameLanguage.CouldNotFindPlayer = reader.ReadString("Language", "CouldNotFindPlayer", GameLanguage.CouldNotFindPlayer);
+        GameLanguage.NoMentorship = reader.ReadString("Language", "NoMentorship", GameLanguage.NoMentorship);
+        GameLanguage.AllowingMentorRequests = reader.ReadString("Language", "AllowingMentorRequests", GameLanguage.AllowingMentorRequests);
+        GameLanguage.BlockingMentorRequests = reader.ReadString("Language", "BlockingMentorRequests", GameLanguage.BlockingMentorRequests);
+    }
+
+    public static void SaveServerLanguage(string languageIniPath)
+    {
+        File.Delete(languageIniPath);
+        InIReader reader = new InIReader(languageIniPath);
+        reader.Write("Language", "Welcome", GameLanguage.Welcome);
+        reader.Write("Language", "OnlinePlayers", GameLanguage.OnlinePlayers);
+        reader.Write("Language", "LowLevel", GameLanguage.LowLevel);
+        reader.Write("Language", "LowGold", GameLanguage.LowGold);
+        reader.Write("Language", "LowDC", GameLanguage.LowDC);
+        reader.Write("Language", "LowMC", GameLanguage.LowMC);
+        reader.Write("Language", "LowSC", GameLanguage.LowSC);
+
+        reader.Write("Language", "LevelUp", GameLanguage.LevelUp);
+
+        reader.Write("Language", "WeaponLuck", GameLanguage.WeaponLuck);
+        reader.Write("Language", "WeaponCurse", GameLanguage.WeaponCurse);
+        reader.Write("Language", "WeaponNoEffect", GameLanguage.WeaponNoEffect);
+
+        reader.Write("Language", "InventoryIncreased", GameLanguage.InventoryIncreased);
+        reader.Write("Language", "ExpandedStorageExpiresOn", GameLanguage.ExpandedStorageExpiresOn);
+        reader.Write("Language", "GameName", GameLanguage.GameName);
+        reader.Write("Language", "FaceToTrade", GameLanguage.FaceToTrade);
+        reader.Write("Language", "NoTownTeleport", GameLanguage.NoTownTeleport);
+        reader.Write("Language", "CanNotRandom", GameLanguage.CanNotRandom);
+        reader.Write("Language", "CanNotDungeon", GameLanguage.CanNotDungeon);
+        reader.Write("Language", "CannotResurrection", GameLanguage.CannotResurrection);
+        reader.Write("Language", "CanNotDrop", GameLanguage.CanNotDrop);
+
+        reader.Write("Language", "NotFemale", GameLanguage.NotFemale);
+        reader.Write("Language", "NotMale", GameLanguage.NotMale);
+        reader.Write("Language", "NotInGuild", GameLanguage.NotInGuild);
+        reader.Write("Language", "NewMail", GameLanguage.NewMail);
+        reader.Write("Language", "CouldNotFindPlayer", GameLanguage.CouldNotFindPlayer);
+        reader.Write("Language", "NoMentorship", GameLanguage.NoMentorship);
+        reader.Write("Language", "AllowingMentorRequests", GameLanguage.AllowingMentorRequests);
+        reader.Write("Language", "BlockingMentorRequests", GameLanguage.BlockingMentorRequests);
+    }
 }

@@ -38,10 +38,10 @@ namespace Client.MirObjects
                     case Monster.SSabukWall2:
                     case Monster.SSabukWall3:
                         return new Point(-10, 0);
-                        break;
+                      
                     case Monster.GiGateEast:
                         return new Point(-45, 7);
-                        break;
+                       
                     default:
                         return new Point(0, 0);
                 }
@@ -156,6 +156,8 @@ namespace Client.MirObjects
                 case Monster.BabySnowMan:
                 case Monster.Frog:
                 case Monster.BabyMonkey:
+                case Monster.AngryBird:
+                case Monster.Foxey:
                     BodyLibrary = Libraries.Pets[((ushort)BaseImage) - 10000];
                     break;
                 case Monster.SabukGate:
@@ -314,6 +316,9 @@ namespace Client.MirObjects
                 case Monster.ArmingWeaver:
                 case Monster.SpiderWarrior:
                 case Monster.SpiderBarbarian:
+                case Monster.SoldierAnt:
+                case Monster.ArmouredAnt:
+                case Monster.FeederAnt:
                     Frames = FrameSet.Monsters[2];
                     break;
                 case Monster.CannibalPlant:
@@ -484,7 +489,7 @@ namespace Client.MirObjects
                 case Monster.CharmedSnake://SummonSnakes Snake
                     Frames = FrameSet.Monsters[52];
                     break;
-                case Monster.HighAssassin:
+                case Monster.飞燕刺客:
                     Frames = FrameSet.Monsters[53];
                     break;
                 case Monster.DarkDustPile:
@@ -997,6 +1002,9 @@ namespace Client.MirObjects
                 case Monster.HellBomb3:
                     Frames = FrameSet.Monsters[207];
                     break;
+                case Monster.ShooterAnt:
+                    Frames = FrameSet.Monsters[208];
+                    break;
 
 
                 case Monster.BabyPig:
@@ -1011,6 +1019,8 @@ namespace Client.MirObjects
                 case Monster.BabySnowMan:
                 case Monster.Frog:
                 case Monster.BabyMonkey:
+                case Monster.AngryBird:
+                case Monster.Foxey:
                     Frames = FrameSet.HelperPets[((ushort)BaseImage) - 10000];
                     break;
                 case Monster.SabukGate:
@@ -1232,9 +1242,11 @@ namespace Client.MirObjects
                 case Monster.BabySnowMan:
                 case Monster.Frog:
                 case Monster.BabyMonkey:
+                case Monster.AngryBird:
+                case Monster.Foxey:
                     BodyLibrary = Libraries.Pets[((ushort)BaseImage) - 10000];
                     break;
-                    break;
+                   
             }
 
             if (ActionFeed.Count == 0)
@@ -1639,7 +1651,7 @@ namespace Client.MirObjects
                             if (ob.Race != ObjectType.Player) break;
                             PlayerObject player = ((PlayerObject)ob);
                             StruckWeapon = player.Weapon;
-                            if (player.Class != MirClass.Assassin || StruckWeapon == -1) break; //Archer?
+                            if (player.Class != MirClass.刺客 || StruckWeapon == -1) break; //弓箭手?
                             StruckWeapon = 1;
                             break;
                         }
@@ -1845,6 +1857,9 @@ namespace Client.MirObjects
                                 case Monster.ZumaStatue:
                                 case Monster.ZumaGuardian:
                                 case Monster.RedThunderZuma:
+                                case Monster.FrozenRedZuma:
+                                case Monster.FrozenZumaStatue:
+                                case Monster.FrozenZumaGuardian:
                                 case Monster.ZumaTaurus:
                                     Stoned = false;
                                     break;
@@ -1885,6 +1900,9 @@ namespace Client.MirObjects
                                 case Monster.ZumaStatue:
                                 case Monster.ZumaGuardian:
                                 case Monster.RedThunderZuma:
+                                case Monster.FrozenRedZuma:
+                                case Monster.FrozenZumaStatue:
+                                case Monster.FrozenZumaGuardian:
                                 case Monster.ZumaTaurus:
                                     Stoned = true;
                                     return;
@@ -2222,6 +2240,7 @@ namespace Client.MirObjects
                                                 }
                                                 break;
                                             case Monster.RedThunderZuma:
+                                            case Monster.FrozenRedZuma:
                                                 ob = MapControl.GetObject(TargetID);
                                                 if (ob != null)
                                                 {
@@ -2740,6 +2759,9 @@ namespace Client.MirObjects
                 case Monster.ZumaStatue:
                 case Monster.ZumaGuardian:
                 case Monster.RedThunderZuma:
+                case Monster.FrozenRedZuma:
+                case Monster.FrozenZumaStatue:
+                case Monster.FrozenZumaGuardian:
                 case Monster.ZumaTaurus:
                     if (Stoned) return;
                     break;
@@ -2885,6 +2907,7 @@ namespace Client.MirObjects
                 case Monster.TurtleKing:
                     return;
                 case Monster.RedThunderZuma:
+                case Monster.FrozenRedZuma:
                 case Monster.KingScorpion:
                 case Monster.DarkDevil:
                 case Monster.Khazard:
@@ -2905,6 +2928,7 @@ namespace Client.MirObjects
                 case Monster.FlameScythe:
                 case Monster.FlameAssassin:
                 case Monster.FlameQueen:
+                case Monster.FeederAnt:
                     SoundManager.PlaySound(BaseSound + 5);
                     return;
                 default:
@@ -2956,6 +2980,8 @@ namespace Client.MirObjects
                 case Monster.BabySnowMan:
                 case Monster.Frog:
                 case Monster.BabyMonkey:
+                case Monster.AngryBird:
+                case Monster.Foxey:
                     SoundManager.PlaySound(petSound);
                     break;
             }
@@ -3060,6 +3086,7 @@ namespace Client.MirObjects
                     }
                     break;
                 case Monster.RedThunderZuma:
+                case Monster.FrozenRedZuma:
                     switch (CurrentAction)
                     {
                         case MirAction.Standing:
@@ -3737,6 +3764,8 @@ namespace Client.MirObjects
                 case Monster.BabySnowMan:
                 case Monster.Frog:
                 case Monster.BabyMonkey:
+                case Monster.AngryBird:
+                case Monster.Foxey:
                     yOffset = -20;
                     break;
             }
@@ -3809,6 +3838,8 @@ namespace Client.MirObjects
                 case Monster.BabySnowMan:
                 case Monster.Frog:
                 case Monster.BabyMonkey:
+                case Monster.AngryBird:
+                case Monster.Foxey:
                     yOffset = 20;
                     break;
             }

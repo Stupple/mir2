@@ -73,7 +73,7 @@ namespace Client
 
         private void CMain_Load(object sender, EventArgs e)
         {
-
+            this.Text = GameLanguage.GameName;
             try
             {
                 ClientSize = new Size(Settings.ScreenWidth, Settings.ScreenHeight);
@@ -139,6 +139,14 @@ namespace Client
             catch (Exception ex)
             {
                 SaveError(ex.ToString());
+            }
+            if (e.KeyCode == Keys.F10)
+            {
+                e.Handled = true;
+                if (GameScene.Scene != null)
+                {
+                    GameScene.Scene.F10();
+                }
             }
         }
         public static void CMain_MouseMove(object sender, MouseEventArgs e)
@@ -654,7 +662,7 @@ namespace Client
         {
             if (CMain.Time < GameScene.LogTime)
             {
-                GameScene.Scene.ChatDialog.ReceiveChat("Cannot leave game for " + (GameScene.LogTime - CMain.Time) / 1000 + " seconds.", ChatType.System);
+                GameScene.Scene.ChatDialog.ReceiveChat(string.Format(GameLanguage.CannotLeaveGame, (GameScene.LogTime - CMain.Time) / 1000), ChatType.System);
                 e.Cancel = true;
             }
         }
